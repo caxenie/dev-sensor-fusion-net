@@ -7,7 +7,7 @@
 % the initial scenario is for heading estimation network development
 
 % clear up environment 
-clear all; clc;
+clear all; clc; close all;
 
 % initialize the simulation 
 % load the robot sensor dataset
@@ -134,8 +134,13 @@ x = zeros(size_x, len_x);
 
 % populate input vector from dataset
 
-% raw gyro
-x(1, :) = robot_data(:, 7); 
+% raw gyro 
+imu_scaling_factor = 1000;
+% scale the data and convert from rad/s to deg/s
+dhead_gyro = (robot_data(:,7)*(180/pi))/imu_scaling_factor ;
+% make consistent with robot reference frame
+dhead_gyro = -dhead_gyro;
+x(1, :) = dhead_gyro;
 
 % raw compass
 % adjust the sign of the magneto to be compliant with the other sensors
@@ -192,14 +197,18 @@ x(4, :) = head_vision;
 %% Network setup
 
 % net params for structure and learning
-net_size = 5; % neurons per lattice coordinate
+net_size = 20; % neurons per lattice coordinate
 gama0 = 0.1; % learning rate init
 sigma0 = net_size/10; % neighborhood radius init
 falpha  = 3; % neuron output activation function param 1
 fbeta = 0.07; % neuron output activation function param 2
-net_epochs = 10; % epochs to present data to the net
+net_epochs = 1; % epochs to present data to the net
 som_net_iter = 1; % current iteration in the input dataset
 som_net_epoch = 1; % current training epoch
+
+% get bound of input vector and initalize weights in that range for speed
+minv = min(x(:));
+maxv = max(x(:));
 
 % net structure
 som_neuron(1:net_size, 1:net_size) = struct('xpos', 0,...
@@ -212,9 +221,9 @@ for idx = 1:net_size
         som_neuron(idx, jdx).xpos    = idx;
         som_neuron(idx, jdx).ypos    = jdx;
         for in_idx = 1:size_x
-            som_neuron(idx, jdx).Wx(in_idx) = rand;
+            som_neuron(idx, jdx).Wx(in_idx) = minv + (maxv-minv)*rand;
         end
-        som_neuron(idx, jdx).Wy      = rand;
+        som_neuron(idx, jdx).Wy      = minv + (maxv-minv)*rand;
         som_neuron(idx, jdx).y       = 0.0;
     end
 end
@@ -222,12 +231,92 @@ end
 % the direct SOM
 som_net = struct('units', som_neuron);   
 
+% net structure for feedback SOM
+som_neuron_feedback(1:net_size, 1:net_size) = struct('xpos', 0,...
+                                            'ypos', 0,...
+                                            'Wx'  , zeros(1, size_x),...
+                                            'Wy'  , 0.0,...
+                                            'y'   , 0.0);
+for idx = 1:net_size
+    for jdx = 1:net_size
+        som_neuron_feedback(idx, jdx).xpos    = idx;
+        som_neuron_feedback(idx, jdx).ypos    = jdx;
+        for in_idx = 1:size_x
+            som_neuron_feedback(idx, jdx).Wx(in_idx) = minv + (maxv-minv)*rand;
+        end
+        som_neuron_feedback(idx, jdx).Wy      = minv + (maxv-minv)*rand;
+        som_neuron_feedback(idx, jdx).y       = 0.0;
+    end
+end
+
 % the feedback SOM
-som_net_feedback = struct('units', som_neuron);   
+som_net_feedback = struct('units', som_neuron_feedback);   
+
+%--------------------------------------------------------------------------
+% visualize the initial weight matrix for the SOM
+fwx  = figure(1);
+set(gcf,'color','white'); box off;
+for idx = 1:net_size
+    for jdx = 1:net_size
+        wx1(idx, jdx) = [som_net.units(idx, jdx).Wx(1)];
+        wx2(idx, jdx) = [som_net.units(idx, jdx).Wx(2)];
+        wx3(idx, jdx) = [som_net.units(idx, jdx).Wx(3)];
+        wx4(idx, jdx) = [som_net.units(idx, jdx).Wx(4)];
+        wy(idx, jdx)  = [som_net.units(idx, jdx).Wy];
+    end
+end
+
+wx_view = [wx1, wx2, wx3, wx4];
+subplot(2,4,1);
+imagesc((wx_view(1:net_size, 1:net_size)));
+colormap;
+subplot(2,4, 2);
+imagesc((wx_view(1:net_size, net_size+1:2*net_size)));
+colormap;
+subplot(2,4, 5);
+imagesc((wx_view(1:net_size, 2*net_size+1:3*net_size)));
+colormap;
+subplot(2,4, 6);
+imagesc((wx_view(1:net_size, 3*net_size+1:4*net_size)));
+colormap;
+subplot(2,4, [3:4, 7:8]);
+imagesc(wy(1:net_size, 1:net_size));
+colormap; 
+
+% % visualize the initial weight matrix for the feeback SOM
+% fwx_feedback  = figure(2);
+% set(gcf,'color','white'); box off;
+% for idx = 1:net_size
+%     for jdx = 1:net_size
+%         wx1_feedback(idx, jdx) = [som_net_feedback.units(idx, jdx).Wx(1)];
+%         wx2_feedback(idx, jdx) = [som_net_feedback.units(idx, jdx).Wx(2)];
+%         wx3_feedback(idx, jdx) = [som_net_feedback.units(idx, jdx).Wx(3)];
+%         wx4_feedback(idx, jdx) = [som_net_feedback.units(idx, jdx).Wx(4)];
+%         wy_feedback(idx, jdx)  = [som_net_feedback.units(idx, jdx).Wy];
+%     end
+% end
+% 
+% wx_view_feedback = [wx1_feedback, wx2_feedback, wx3_feedback, wx4_feedback];
+% subplot(2,4,1);
+% imagesc((wx_view_feedback(1:net_size, 1:net_size)));
+% colormap;
+% subplot(2,4, 2);
+% imagesc((wx_view_feedback(1:net_size, net_size+1:2*net_size)));
+% colormap;
+% subplot(2,4, 5);
+% imagesc((wx_view_feedback(1:net_size, 2*net_size+1:3*net_size)));
+% colormap;
+% subplot(2,4, 6);
+% imagesc((wx_view_feedback(1:net_size, 3*net_size+1:4*net_size)));
+% colormap;
+% subplot(2,4, [3:4, 7:8]);
+% imagesc(wy_feedback(1:net_size, 1:net_size));
+% colormap;
+%--------------------------------------------------------------------------
 
 % learning phase 
 while(1)
-    if(som_net_epoch < net_epochs)
+    if(som_net_epoch <= net_epochs)
         % if we are still training the net and didn't reach the max epoch
         % present input data vector to the network
         % for each entry in the input data vector
@@ -235,11 +324,12 @@ while(1)
            % init BMU
            bmu.xpos = 0;
            bmu.ypos = 0;
-           bmu.Wx = rand(1, size_x);
-           bmu.Wy = rand;
+           % generate random weights in the [MIN MAX] interval of input x
+           bmu.Wx = minv + (maxv-minv)*rand(1, size_x);
+           bmu.Wy = minv + (maxv-minv)*rand;
            bmu.y  = 0.0;
            % init max quantization error
-           ei_max = bitmax;
+           ei_max = flintmax;
            
            % search for the BMU
            for idx = 1:net_size
@@ -259,50 +349,54 @@ while(1)
                                        x(3, data_idx) - WX3,...
                                        x(4, data_idx) - WX4], 2)^2+...
                          fbeta*norm(Y_VECT - WY, 2)^2;
-                    
+                    	
                     % compute the activation (output) of the current neuron
-                    som_net(idx, jdx).y = exp(ei);
+                    som_net(idx, jdx).y = exp(-ei);
                     
                     % check if the current neuron is the BMU
                     if(ei < ei_max)
                         % if bmu found
                         bmu.xpos = idx;
                         bmu.ypos = jdx;
-                        ei_max = ei;
+                        ei_max = ei;                        
+                        bmu_hist(som_net_iter) = bmu;
+                        ei_hist(som_net_iter) = ei;
+                        y_hist (som_net_iter) = som_net(idx, jdx).y;
                     end
                end
            end
            
-           % adjust the neighborhood kernel 
+           % adjust the neighborhood kernel
            for idx = 1:net_size
                for jdx = 1:net_size
-                    % time ct in radius and learning rate adaptation
-                    lambda = net_epochs/log(sigma0);
-                    % update the learning rate 
-                    gama = gama0 * exp(-(som_net_iter)/lambda);
-                    % update the neighborhood radius size
-                    sigma = sigma0*exp(-som_net_iter/lambda);
-                    % compute the value of the neighborhood kernel
-                    h = gama*exp(-(sqrt((bmu.xpos - idx)^2+(bmu.ypos - jdx)^2))^2/(2*sigma^2));
-                    
-                    % update weights for the current neuron in the BMU
-                    % neighborhood if in the radius
-                    if(sqrt((bmu.xpos - idx)^2+(bmu.ypos - jdx)^2) < sigma^2)
-                        for in_idx = 1:size_x
-                            WX_VECT_FIELD = som_net.units;
-                            WX_VECT = WX_VECT_FIELD(idx, jdx);
-                            WX = WX_VECT.Wx(in_idx);
-                            WX =  WX + h*(bmu.Wx(in_idx) - WX);
-                            WX = abs(WX);
-                        end
-                        WY_VECT_FIELD = som_net.units;
-                        WY_VECT = WY_VECT_FIELD(idx, jdx);
-                        WY = WY_VECT.Wy;
-                        WY =  WY + h*(bmu.Wy - WY);
-                        WY = abs(WY);
-                    end
+                   % time ct in radius and learning rate adaptation
+                   lambda = net_epochs/log(sigma0);
+                   % update the learning rate
+                   gama = gama0 * exp(-(som_net_iter)/lambda);
+                   % update the neighborhood radius size
+                   sigma = sigma0*exp(-som_net_iter/lambda);
+                   % compute the value of the neighborhood kernel
+                   h = gama*exp(-(sqrt((bmu.xpos - idx)^2+(bmu.ypos - jdx)^2))^2/(2*sigma^2));
+                   
+                   % update weights for the current neuron in the BMU
+                   % neighborhood if in the radius
+                   if(sqrt((bmu.xpos - idx)^2+(bmu.ypos - jdx)^2) < sigma^2)
+                       for in_idx = 1:size_x
+                           WX_VECT_FIELD = som_net.units;
+                           WX_VECT = WX_VECT_FIELD(idx, jdx);
+                           WX = WX_VECT.Wx(in_idx);
+                           WX =  WX + h*(bmu.Wx(in_idx) - WX);
+                           WX = abs(WX);
+                       end
+                       WY_VECT_FIELD = som_net.units;
+                       WY_VECT = WY_VECT_FIELD(idx, jdx);
+                       WY = WY_VECT.Wy;
+                       WY =  WY + h*(bmu.Wy - WY);
+                       WY = abs(WY);
+                   end
                end
            end
+
            
            % increment iteration through input vector 
            som_net_iter = som_net_iter + 1;
@@ -319,6 +413,70 @@ while(1)
        break; 
     end
 end
+%--------------------------------------------------------------------------
+% visualize the initial weight matrix for the SOM
+fwxl  = figure(3);
+set(gcf,'color','white'); box off;
+for idx = 1:net_size
+    for jdx = 1:net_size
+        temp_idx = som_net.units;
+        temp = temp_idx(idx, jdx);
+        wx1(idx, jdx) = [temp.Wx(1)];
+        wx2(idx, jdx) = [temp.Wx(2)];
+        wx3(idx, jdx) = [temp.Wx(3)];
+        wx4(idx, jdx) = [temp.Wx(4)];
+        wy(idx, jdx)  = [temp.Wy];
+    end
+end
 
+wx_view = [wx1, wx2, wx3, wx4];
+subplot(2,4,1);
+imagesc((wx_view(1:net_size, 1:net_size)));
+colormap;
+subplot(2,4, 2);
+imagesc((wx_view(1:net_size, net_size+1:2*net_size)));
+colormap;
+subplot(2,4, 5);
+imagesc((wx_view(1:net_size, 2*net_size+1:3*net_size)));
+colormap;
+subplot(2,4, 6);
+imagesc((wx_view(1:net_size, 3*net_size+1:4*net_size)));
+colormap;
+subplot(2,4, [3:4, 7:8]);
+imagesc(wy(1:net_size, 1:net_size));
+colormap; 
+% % visualize the initial weight matrix for the feeback SOM
+% fwx_feedbackl  = figure(4);
+% set(gcf,'color','white'); box off;
+% for idx = 1:net_size
+%     for jdx = 1:net_size
+%         temp_idx = som_net_feedback.units;
+%         temp = temp_idx(idx, jdx);
+%         wx1_feedback(idx, jdx) = [temp.Wx(1)];
+%         wx2_feedback(idx, jdx) = [temp.Wx(2)];
+%         wx3_feedback(idx, jdx) = [temp.Wx(3)];
+%         wx4_feedback(idx, jdx) = [temp.Wx(4)];
+%         wy_feedback(idx, jdx)  = [temp.Wy];
+%     end
+% end
+% 
+% wx_view_feedback = [wx1_feedback, wx2_feedback, wx3_feedback, wx4_feedback];
+% subplot(2,4,1);
+% imagesc((wx_view_feedback(1:net_size, 1:net_size)));
+% colormap;
+% subplot(2,4, 2);
+% imagesc((wx_view_feedback(1:net_size, net_size+1:2*net_size)));
+% colormap;
+% subplot(2,4, 5);
+% imagesc((wx_view_feedback(1:net_size, 2*net_size+1:3*net_size)));
+% colormap;
+% subplot(2,4, 6);
+% imagesc((wx_view_feedback(1:net_size, 3*net_size+1:4*net_size)));
+% colormap;
+% subplot(2,4, [3:4, 7:8]);
+% imagesc(wy_feedback(1:net_size, 1:net_size));
+% colormap;
+%--------------------------------------------------------------------------
+set(gcf, 'Color','white');
 
                                
