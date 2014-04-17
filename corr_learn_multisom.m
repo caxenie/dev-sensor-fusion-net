@@ -299,7 +299,7 @@ while(1)
                         % cross modal input
                         for w_idx = 1:IN_SIZE
                             som1(idx, jdx).W(w_idx) = som1(idx, jdx).W(w_idx) + ALPHA(net_epochs)*som1(idx, jdx).at*qe1(idx, jdx)-...
-                                XI*(som1(idx, jdx).ad - som1(idx, jdx).at)*qe1(idx, jdx);
+                                XI*(som1(idx, jdx).ad - som1(idx, jdx).at)*(training_set_p1(data_idx, w_idx) - som1(idx, jdx).W(w_idx));
                             
                         end
                     end % end if in BMU neighborhood
@@ -354,7 +354,7 @@ while(1)
                         % cross modal input
                         for w_idx = 1:IN_SIZE
                             som2(idx, jdx).W(w_idx) = som2(idx, jdx).W(w_idx) + ALPHA(net_epochs)*som2(idx, jdx).at*qe2(idx, jdx)-...
-                                XI*(som2(idx, jdx).ad - som2(idx, jdx).at)*qe2(idx, jdx);
+                                XI*(som2(idx, jdx).ad - som2(idx, jdx).at)*(training_set_p2(data_idx, w_idx) - som2(idx, jdx).W(w_idx));
                             
                         end
                     end % end if in BMU neighborhood
