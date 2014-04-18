@@ -52,7 +52,7 @@ NET_SIZE      = 10;
 ALPHA0        = 0.1; % learning rate initialization
 SIGMA0        = max(NET_SIZE_LONG, NET_SIZE_LAT)/2; % intial radius size
 NET_ITER      = 1;  % inti counter for input vector entries
-IN_SIZE       = 10; % input vector size = samples to bind in a input vector
+IN_SIZE       = 5; % input vector size = samples to bind in a input vector
 MAX_EPOCHS    = 3; % epochs to run
 LAMBDA        = 1000/log(SIGMA0); % time constant for radius adaptation
 net_epochs    = 1;  % init counter for epochs
@@ -394,7 +394,7 @@ while(1)
                     for w_idx = 1:IN_SIZE
                         for norm_idx = 1:NET_SIZE
                             for norm_jdx = 1:NET_SIZE
-                                sum_norm_W2(w_idx) = sum_norm_W2(idx) + (som2(norm_idx, norm_jdx).W(w_idx) + ALPHA(net_epochs)*som2(norm_idx, norm_jdx).at*qe2_dir(norm_idx, norm_jdx)-...
+                                sum_norm_W2(w_idx) = sum_norm_W2(w_idx) + (som2(norm_idx, norm_jdx).W(w_idx) + ALPHA(net_epochs)*som2(norm_idx, norm_jdx).at*qe2_dir(norm_idx, norm_jdx)-...
                                     XI*(som2(norm_idx, norm_jdx).ad - som2(norm_idx, norm_jdx).at)*qe2_dir(norm_idx, norm_jdx))^2;
                             end
                         end
