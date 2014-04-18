@@ -58,11 +58,11 @@ LAMBDA        = 1000/log(SIGMA0); % time constant for radius adaptation
 net_epochs    = 1;  % init counter for epochs
 % extract the bound of the input intervals in the two input vars to
 % initialize the weights in the bounds for faster convergence
-% MIN_P1 = min(p1); MAX_P1 = max(p1);
-% MIN_P2 = min(p2); MAX_P2 = max(p2);
+MIN_P1 = min(p1); MAX_P1 = max(p1);
+MIN_P2 = min(p2); MAX_P2 = max(p2);
 
-MIN_P1 = 0; MAX_P1 = 1;
-MIN_P2 = 0; MAX_P2 = 1;
+% MIN_P1 = 0; MAX_P1 = 1;
+% MIN_P2 = 0; MAX_P2 = 1;
 
 %% INITIALIZE THE SOM FOR THE FIRST INPUT
 
@@ -95,7 +95,7 @@ for idx = 1:NET_SIZE
 end
 
 % intialize the SOM1 BMU
-bmu1=     struct('xpos', 0,...
+bmu1_dir=     struct('xpos', 0,...
     'ypos', 0,...
     'W'   , zeros(1, IN_SIZE),...          % input weights
     'H'   , zeros(NET_SIZE, NET_SIZE),...  % Hebbian weights for cross-SOM interaction
@@ -105,16 +105,16 @@ bmu1=     struct('xpos', 0,...
     );
 
 for in_idx = 1:IN_SIZE
-    bmu1.W(in_idx) = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
+    bmu1_dir.W(in_idx) = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
 end
 for kidx = 1:NET_SIZE
     for tidx = 1:NET_SIZE
-        bmu1.H(kidx, tidx)  = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
+        bmu1_dir.H(kidx, tidx)  = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
     end
 end
-bmu1.ad = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
-bmu1.ai = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
-bmu1.at = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
+bmu1_dir.ad = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
+bmu1_dir.ai = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
+bmu1_dir.at = MIN_P1 + (MAX_P1 - MIN_P1)*rand;
 
 %% INITIALIZE THE SOM FOR SECOND INPUT
 
@@ -147,7 +147,7 @@ for idx = 1:NET_SIZE
 end
 
 % intialize the SOM1 BMU
-bmu2=     struct('xpos', 0,...
+bmu2_dir=     struct('xpos', 0,...
     'ypos', 0,...
     'W'   , zeros(1, IN_SIZE),...          % input weights
     'H'   , zeros(NET_SIZE, NET_SIZE),...  % Hebbian weights for cross-SOM interaction
@@ -157,16 +157,16 @@ bmu2=     struct('xpos', 0,...
     );
 
 for in_idx = 1:IN_SIZE
-    bmu2.W(in_idx) = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
+    bmu2_dir.W(in_idx) = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
 end
 for kidx = 1:NET_SIZE
     for tidx = 1:NET_SIZE
-        bmu2.H(kidx, tidx)  = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
+        bmu2_dir.H(kidx, tidx)  = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
     end
 end
-bmu2.ad = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
-bmu2.ai = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
-bmu2.at = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
+bmu2_dir.ad = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
+bmu2_dir.ai = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
+bmu2_dir.at = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
 
 %% NETWORK DYNAMICS
 
@@ -192,8 +192,10 @@ end
 % activation
 
 % init quantization errors
-qe1 = zeros(NET_SIZE, NET_SIZE);
-qe2 = zeros(NET_SIZE, NET_SIZE);
+qe1_dir = zeros(NET_SIZE, NET_SIZE);
+qe2_dir = zeros(NET_SIZE, NET_SIZE);
+qe1_ind = zeros(NET_SIZE, NET_SIZE);
+qe2_ind = zeros(NET_SIZE, NET_SIZE);
 bmu1_dist = 0.0;
 bmu2_dist = 0.0;
 
@@ -207,8 +209,8 @@ cross_mod2 = 0.0;
 
 % normalization factors
 % for input weights
-sum_norm_W1 = 0.0; sum_norm_W2 = 0.0;
-sum_norm_H1 = 0.0; sum_norm_H2 = 0.0;
+sum_norm_W1 = zeros(1, IN_SIZE); sum_norm_W2 = zeros(1, IN_SIZE);
+sum_norm_H1 = zeros(1, IN_SIZE); sum_norm_H2 = zeros(1, IN_SIZE);
 
 % cross modal influence factor
 GAMA = 0.1;
@@ -224,33 +226,66 @@ while(1)
         % we have length(in)/IN_SIZE vectors of size IN_SIZE
         for data_idx = 1:training_set_size
             % max quantization error init
-            qe_max1 = 999999999;
-            qe_max2 = 999999999;
+            qe_max1_dir = Inf; qe_max2_dir = Inf;
+            qe_max1_ind = Inf; qe_max2_ind = Inf;
+            
             % search for the BMU in each SOM after applying an input vector
+            % this is the BMU from input propagation
             % to the networks in a pairwise manner
             for idx = 1:NET_SIZE
                 for jdx = 1:NET_SIZE
+                    
                     % compute the quantization error between the current
                     % input and the neurons in each SOM
                     % first to check is SOM1
-                    qe1(idx, jdx) = norm(training_set_p1(data_idx, :) - som1(idx, jdx).W);
-                    % check if current neuron in bmu
-                    if(qe1(idx, jdx)<qe_max1)
-                        bmu1.xpos = idx;
-                        bmu1.ypos = jdx;
-                        qe_max1 = qe1(idx, jdx);
-                        bmu1_dist = qe1(idx, jdx);
+                    qe1_dir(idx, jdx) = norm(training_set_p1(data_idx, :) - som1(idx, jdx).W);
+                    % check if current neuron is winner
+                    if(qe1_dir(idx, jdx)<qe_max1_dir)
+                        bmu1_dir.xpos = idx;
+                        bmu1_dir.ypos = jdx;
+                        qe_max1_dir = qe1_dir(idx, jdx);
+                        bmu1_dist = qe1_dir(idx, jdx);
                     end
                     % now check SOM2
-                    qe2(idx, jdx) = norm(training_set_p2(data_idx, :) - som2(idx, jdx).W);
-                    % check if current neuron in bmu
-                    if(qe2(idx, jdx)<qe_max2)
-                        bmu2.xpos = idx;
-                        bmu2.ypos = jdx;
-                        qe_max2 = qe2(idx, jdx);
-                        bmu2_dist = qe2(idx, jdx);
+                    qe2_dir(idx, jdx) = norm(training_set_p2(data_idx, :) - som2(idx, jdx).W);
+                    % check if current neuron is winner
+                    if(qe2_dir(idx, jdx)<qe_max2_dir)
+                        bmu2_dir.xpos = idx;
+                        bmu2_dir.ypos = jdx;
+                        qe_max2_dir = qe2_dir(idx, jdx);
+                        bmu2_dist = qe2_dir(idx, jdx);
                     end
                 end
+                
+                % we also need to compute the BMU from the cross-modal
+                % interaction between the maps
+                
+                % compute the cross-interaction BMU for the first SOM
+                for som2_idx = 1:NET_SIZE
+                    for som2_jdx = 1:NET_SIZE
+                        qe1_ind(idx, jdx) = norm(som2(som2_idx, som2_jdx).H - som1(idx, jdx).H);
+                        % check if current neuron is winner
+                        if(qe1_ind(idx, jdx)<qe_max1_ind)
+                            bmu1_ind.xpos = idx;
+                            bmu1_ind.ypos = jdx;
+                            qe_max1_ind = qe1_ind(idx, jdx);
+                        end
+                    end
+                end
+                
+                % compute the cross-interaction BMU for the seond SOM
+                for som1_idx = 1:NET_SIZE
+                    for som1_jdx = 1:NET_SIZE
+                        qe2_ind(idx, jdx) = norm(som1(som1_idx, som1_jdx).H - som2(idx, jdx).H);
+                        % check if current neuron is winner
+                        if(qe2_ind(idx, jdx)<qe_max2_ind)
+                            bmu2_ind.xpos = idx;
+                            bmu2_ind.ypos = jdx;
+                            qe_max2_ind = qe2_ind(idx, jdx);
+                        end
+                    end
+                end
+                
             end % end for BMU search loop
             
             % compute the activations of all nodes in the BMU neighborhood
@@ -267,7 +302,7 @@ while(1)
                     % compute the direct activation - neighborhood kernel
                     som1(idx, jdx).ad = ALPHA(net_epochs)*...
                         1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu1.xpos, jdx - bmu1.ypos]))^2/(2*(SIGMA(net_epochs)^2)))*(1 - qe1(idx, jdx));
+                        exp(-(norm([idx - bmu1_dir.xpos, jdx - bmu1_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2)))*(1 - qe1_dir(idx, jdx));
                     
                     % compute the indirect activation (from all other units in SOM2)
                     % first compute the total activation from the other SOM
@@ -285,56 +320,41 @@ while(1)
                     % compute the joint activation from both input space
                     % and cross-modal Hebbian linkage
                     
-                    % get the activation of the BMU from direct projection
-                    % from the input space
-                    bmu1_ad = som1(bmu1.xpos, bmu1.ypos).ad;
-                    bmu1_ai = som1(bmu1.xpos, bmu1.ypos).ai;
                     som1(idx, jdx).at = (1 - GAMA)*1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu1.xpos, jdx - bmu1.ypos]))^2/(2*(SIGMA(net_epochs)^2))) + ...
+                        exp(-(norm([idx - bmu1_dir.xpos, jdx - bmu1_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2))) + ...
                         GAMA* 1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu1.xpos, jdx - bmu1.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
+                        exp(-(norm([idx - bmu1_ind.xpos, jdx - bmu1_ind.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
                     
                     % update weights for the current neuron in the BMU
-                    % neighborhood if in the radius
-                    if((norm([idx - bmu1.xpos, jdx - bmu1.ypos])) < SIGMA(net_epochs)^2)
-                        
-                        % normalize weights from input space
-                        % compute the sum squared weight update for normalization
-                        for w_idx = 1:IN_SIZE
-                            for norm_idx = 1:NET_SIZE
-                                for norm_jdx = 1:NET_SIZE
-                                    sum_norm_W1 = sum_norm_W1 + (som1(norm_idx, norm_jdx).W(w_idx) + ALPHA(net_epochs)*som1(norm_idx, norm_jdx).at*qe1(norm_idx, norm_jdx)-...
-                                        XI*(som1(norm_idx, norm_jdx).ad - som1(norm_idx, norm_jdx).at)*(training_set_p1(data_idx, w_idx) - som1(norm_idx, norm_jdx).W(w_idx)))^2;
-                                end
+                    
+                    % normalize weights from input space
+                    % compute the sum squared weight update for normalization
+                    for w_idx = 1:IN_SIZE
+                        for norm_idx = 1:NET_SIZE
+                            for norm_jdx = 1:NET_SIZE
+                                sum_norm_W1(w_idx) = sum_norm_W1(w_idx) + (som1(norm_idx, norm_jdx).W(w_idx) + ALPHA(net_epochs)*som1(norm_idx, norm_jdx).at*qe1_dir(norm_idx, norm_jdx)-...
+                                    XI*(som1(norm_idx, norm_jdx).ad - som1(norm_idx, norm_jdx).at)*qe1_dir(norm_idx, norm_jdx))^2;
                             end
                         end
-                        
-                        % input weights update combining an excitatory and
-                        % inhibitory component such that a unit is brought
-                        % closer to the input if is activated by BOTH input and
-                        % cross modal input
-                        for w_idx = 1:IN_SIZE
-                            som1(idx, jdx).W(w_idx) = (som1(idx, jdx).W(w_idx) + ALPHA(net_epochs)*som1(idx, jdx).at*qe1(idx, jdx)-...
-                                XI*(som1(idx, jdx).ad - som1(idx, jdx).at)*(training_set_p1(data_idx, w_idx) - som1(idx, jdx).W(w_idx)))/...
-                                sqrt(sum_norm_W1);
-                        end
-                    end % end if in BMU neighborhood
+                    end
+                    
+                    % input weights update combining an excitatory and
+                    % inhibitory component such that a unit is brought
+                    % closer to the input if is activated by BOTH input and
+                    % cross modal input
+                    for w_idx = 1:IN_SIZE
+                        som1(idx, jdx).W(w_idx) = (som1(idx, jdx).W(w_idx) + ALPHA(net_epochs)*som1(idx, jdx).at*qe1_dir(idx, jdx)-...
+                            XI*(som1(idx, jdx).ad - som1(idx, jdx).at)*(training_set_p1(data_idx, w_idx) - som1(idx, jdx).W(w_idx)))/...
+                            sqrt(sum_norm_W1(w_idx));
+                    end
                     
                     % cross-modal Hebbian links update for co-activated
                     % neurons in both SOMs
                     for isom2 = 1:NET_SIZE
                         for jsom2 = 1:NET_SIZE
-                            
-                            % normalize cross-modal Hebbian weights
-                            for norm_idx = 1:NET_SIZE
-                                for norm_jdx = 1:NET_SIZE
-                                    sum_norm_H1 = sum_norm_H1 + (som1(idx, jdx).H(isom2, jsom2)+KAPPA*(som1(idx, jdx).at*som2(idx, jdx).at))^2;
-                                end
-                            end
-                            
+                                                     
                             % compute new weight
-                            som1(idx, jdx).H(isom2, jsom2)= (som1(idx, jdx).H(isom2, jsom2)+KAPPA*(som1(idx, jdx).at*som2(idx, jdx).at))/...
-                                sqrt(sum_norm_H1);
+                            som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2)+ KAPPA*(som1(idx, jdx).at*som2(idx, jdx).at);
                         end
                     end
                     
@@ -344,7 +364,7 @@ while(1)
                     % compute the direct activation - neighborhood kernel
                     som2(idx, jdx).ad = ALPHA(net_epochs)*...
                         1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu2.xpos, jdx - bmu2.ypos]))^2/(2*(SIGMA(net_epochs)^2)))*(1-qe2(idx, jdx));
+                        exp(-(norm([idx - bmu2_dir.xpos, jdx - bmu2_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2)))*(1-qe2_dir(idx, jdx));
                     
                     % compute the indirect activation (from all other units in SOM2)
                     % first compute the total activation from the other SOM
@@ -361,58 +381,43 @@ while(1)
                     
                     % compute the joint activation from both input space
                     % and cross-modal Hebbian linkage
-                    
-                    % get the activation of the BMU from direct projection
-                    % from the input space
-                    bmu2_ad = som2(bmu2.xpos, bmu2.ypos).ad;
-                    bmu2_ai = som2(bmu2.xpos, bmu2.ypos).ai;
+
                     som2(idx, jdx).at = (1 - GAMA)*1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu2.xpos, jdx - bmu2.ypos]))^2/(2*(SIGMA(net_epochs)^2))) + ...
+                        exp(-(norm([idx - bmu2_dir.xpos, jdx - bmu2_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2))) + ...
                         GAMA* 1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu2.xpos, jdx - bmu2.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
+                        exp(-(norm([idx - bmu2_dir.xpos, jdx - bmu2_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
                     
                     % update weights for the current neuron in the BMU
-                    % neighborhood if in the radius
-                    if((norm([idx - bmu2.xpos, jdx - bmu2.ypos])) < SIGMA(net_epochs)^2)
-                        
-                        % normalize weights from input space
-                        % compute the sum squared weight update for normalization
-                        for w_idx = 1:IN_SIZE
-                            for norm_idx = 1:NET_SIZE
-                                for norm_jdx = 1:NET_SIZE
-                                    sum_norm_W2 = sum_norm_W2 + (som2(norm_idx, norm_jdx).W(w_idx) + ALPHA(net_epochs)*som2(norm_idx, norm_jdx).at*qe2(norm_idx, norm_jdx)-...
-                                        XI*(som2(norm_idx, norm_jdx).ad - som2(norm_idx, norm_jdx).at)*(training_set_p2(data_idx, w_idx) - som2(norm_idx, norm_jdx).W(w_idx)))^2;
-                                end
+                    
+                    % normalize weights from input space
+                    % compute the sum squared weight update for normalization
+                    for w_idx = 1:IN_SIZE
+                        for norm_idx = 1:NET_SIZE
+                            for norm_jdx = 1:NET_SIZE
+                                sum_norm_W2(w_idx) = sum_norm_W2(idx) + (som2(norm_idx, norm_jdx).W(w_idx) + ALPHA(net_epochs)*som2(norm_idx, norm_jdx).at*qe2_dir(norm_idx, norm_jdx)-...
+                                    XI*(som2(norm_idx, norm_jdx).ad - som2(norm_idx, norm_jdx).at)*qe2_dir(norm_idx, norm_jdx))^2;
                             end
                         end
+                    end
+                    
+                    % input weights update combining an excitatory and
+                    % inhibitory component such that a unit is brought
+                    % closer to the input if is activated by BOTH input and
+                    % cross modal input
+                    for w_idx = 1:IN_SIZE
+                        som2(idx, jdx).W(w_idx) = (som2(idx, jdx).W(w_idx) + ALPHA(net_epochs)*som2(idx, jdx).at*qe2_dir(idx, jdx)-...
+                            XI*(som2(idx, jdx).ad - som2(idx, jdx).at)*(training_set_p2(data_idx, w_idx) - som2(idx, jdx).W(w_idx)))/...
+                            sqrt(sum_norm_W2(w_idx));
                         
-                        % input weights update combining an excitatory and
-                        % inhibitory component such that a unit is brought
-                        % closer to the input if is activated by BOTH input and
-                        % cross modal input
-                        for w_idx = 1:IN_SIZE
-                            som2(idx, jdx).W(w_idx) = (som2(idx, jdx).W(w_idx) + ALPHA(net_epochs)*som2(idx, jdx).at*qe2(idx, jdx)-...
-                                XI*(som2(idx, jdx).ad - som2(idx, jdx).at)*(training_set_p2(data_idx, w_idx) - som2(idx, jdx).W(w_idx)))/...
-                                sqrt(sum_norm_W2);
-                            
-                        end
-                    end % end if in BMU neighborhood
+                    end
                     
                     % cross-modal Hebbian links update for co-activated
                     % neurons in both SOMs
                     for isom1 = 1:NET_SIZE
                         for jsom1 = 1:NET_SIZE
                             
-                            % normalize cross-modal Hebbian weights
-                            for norm_idx = 1:NET_SIZE
-                                for norm_jdx = 1:NET_SIZE
-                                    sum_norm_H2 = sum_norm_H2 + (som2(idx, jdx).H(isom1, jsom1)+KAPPA*(som2(idx, jdx).at*som1(idx, jdx).at))^2;
-                                end
-                            end
-                            
                             % compute new weight
-                            som2(idx, jdx).H(isom1, jsom1)= (som2(idx, jdx).H(isom1, jsom1)+KAPPA*(som2(idx, jdx).at*som1(idx, jdx).at))/...
-                                sqrt(sum_norm_H2);
+                            som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1)+KAPPA*(som2(idx, jdx).at*som1(idx, jdx).at);
                         end
                     end
                     
