@@ -12,17 +12,38 @@ scaling_factor = 1000;
 p1 = (test_data(:,7)*(180/pi))/scaling_factor;
 p1 = -p1;
 
-% second variable (integral - accumulation @ 25Hz -> shift in freq)
-sample_freq = 25; % Hz
-sample_time = 1/sample_freq;
-p2 = zeros(1, length(test_data));
-p2(1) = p1(1);
+% test flag to implement different raltionships between the 2 encoded
+% variables in the network
 
-% compute the absolute value (Euler)
-for i=2:length(test_data)
-    p2(i) = p2(i-1) + ...
-        (sample_time*(p1(i)));
-end
+% types of relations
+temporal = 0;
+algebraic = 1;
+trigo = 2;
+
+% set type
+correlation_type = algebraic;
+
+switch correlation_type
+    case temporal
+            % second variable (integral - accumulation @ 25Hz -> shift in freq)
+            sample_freq = 25; % Hz
+            sample_time = 1/sample_freq;
+            p2 = zeros(1, length(test_data));
+            p2(1) = p1(1);
+            % compute the absolute value (Euler)
+            for i=2:length(test_data)
+                p2(i) = p2(i-1) + ...
+                    (sample_time*(p1(i)));
+            end
+    case algebraic
+            % second variable might be linked to the first one using an algebraic
+            % relationship - sample
+            p2 = 3*p1 - 5;
+    case trigo
+            % second varible is linked to the first using a trigonometric
+            % relationship - sample 
+            p2 = 4.5*sin(p1/5) + 6.5;
+end % type switch
 
 %% RUNTIME FLAGS
 
@@ -36,33 +57,42 @@ if(input_vis==1)
     in_vis = figure(1);
     set(gcf, 'color', 'white');
     subplot(2, 1, 1);plot(p1, '.b'); box off; grid off;
-    title('Input var P1 (rate of change)');
+    title('Input var P1');
     subplot(2, 1, 2);plot(p2, '.g'); box off; grid off;
-    title('Input var P2 (accumulated values shifted in freq)');
+    title('Input var P2');
     ylabel('Samples');
 end
 
 %% NETWORK STRUCTURE
 
-% net parameters for structure and learning
-NET_SIZE_LONG = 10;  % network lattice size long
-NET_SIZE_LAT  = 10;  % network lattice size wide
 % for rectangular lattice
 NET_SIZE      = 10;
+% net parameters for structure and learning
+NET_SIZE_LONG = NET_SIZE;  % network lattice size long
+NET_SIZE_LAT  = NET_SIZE;  % network lattice size wide
 ALPHA0        = 0.1; % learning rate initialization
 SIGMA0        = max(NET_SIZE_LONG, NET_SIZE_LAT)/2; % intial radius size
-NET_ITER      = 1;  % inti counter for input vector entries
-IN_SIZE       = 5; % input vector size = samples to bind in a input vector
-MAX_EPOCHS    = 3; % epochs to run
+IN_SIZE       = 20; % input vector size = samples to bind in the input vector
+MAX_EPOCHS    = 10; % epochs to run
 LAMBDA        = 1000/log(SIGMA0); % time constant for radius adaptation
+
+% iterator for relaxation
 net_epochs    = 1;  % init counter for epochs
+
 % extract the bound of the input intervals in the two input vars to
 % initialize the weights in the bounds for faster convergence
-MIN_P1 = min(p1); MAX_P1 = max(p1);
-MIN_P2 = min(p2); MAX_P2 = max(p2);
 
-% MIN_P1 = 0; MAX_P1 = 1;
-% MIN_P2 = 0; MAX_P2 = 1;
+% for temporal computation it's good to speed up computation by
+% initializing the weights in the min - max bounds of the data from each
+% source
+if correlation_type == temporal
+    MIN_P1 = min(p1); MAX_P1 = max(p1);
+    MIN_P2 = min(p2); MAX_P2 = max(p2);
+else
+    % else a [0,1] initialization is fine
+    MIN_P1 = 0; MAX_P1 = 1;
+    MIN_P2 = 0; MAX_P2 = 1;
+end
 
 %% INITIALIZE THE SOM FOR THE FIRST INPUT
 
@@ -293,9 +323,9 @@ while(1)
                 for jdx = 1:NET_SIZE
                     %-------------------------------------------------------------------------------
                     % use the same leraning parameters for both SOM
-                    % compute the learning rate
+                    % compute the learning rate @ current epoch
                     ALPHA(net_epochs) = ALPHA0*exp(-net_epochs/TAU);
-                    % compute the neighborhood radius size
+                    % compute the neighborhood radius size @ current epoch
                     SIGMA(net_epochs) = SIGMA0*exp(-net_epochs/LAMBDA);
                     %-------------------------------------------------------------------------------
                     % fist SOM activations
@@ -306,7 +336,7 @@ while(1)
                     
                     % compute the indirect activation (from all other units in SOM2)
                     % first compute the total activation from the other SOM
-                    % via the Hebbian links
+                    % projected via the Hebbian links
                     for isom2 = 1:NET_SIZE
                         for jsom2 = 1:NET_SIZE
                             % sum of all products between direct activation
@@ -322,7 +352,7 @@ while(1)
                     
                     som1(idx, jdx).at = (1 - GAMA)*1/(sqrt(2*pi)*SIGMA(net_epochs))*...
                         exp(-(norm([idx - bmu1_dir.xpos, jdx - bmu1_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2))) + ...
-                        GAMA* 1/(sqrt(2*pi)*SIGMA(net_epochs))*...
+                        GAMA*1/(sqrt(2*pi)*SIGMA(net_epochs))*...
                         exp(-(norm([idx - bmu1_ind.xpos, jdx - bmu1_ind.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
                     
                     % update weights for the current neuron in the BMU
@@ -352,14 +382,15 @@ while(1)
                     % neurons in both SOMs
                     for isom2 = 1:NET_SIZE
                         for jsom2 = 1:NET_SIZE
-                                                     
-                            % compute new weight
-                            som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2)+ KAPPA*(som1(idx, jdx).at*som2(idx, jdx).at);
+                            
+                            % compute new weight using Hebbian learning
+                            % rule deltaH = K*preH*postH
+                            som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2)+ KAPPA*som1(idx, jdx).at*som2(idx, jdx).at;
                         end
                     end
                     
                     %-------------------------------------------------------------------------------
-                    % second SOM activations
+                    % compute second SOM activations
                     
                     % compute the direct activation - neighborhood kernel
                     som2(idx, jdx).ad = ALPHA(net_epochs)*...
@@ -381,11 +412,11 @@ while(1)
                     
                     % compute the joint activation from both input space
                     % and cross-modal Hebbian linkage
-
+                    
                     som2(idx, jdx).at = (1 - GAMA)*1/(sqrt(2*pi)*SIGMA(net_epochs))*...
                         exp(-(norm([idx - bmu2_dir.xpos, jdx - bmu2_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2))) + ...
                         GAMA* 1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu2_dir.xpos, jdx - bmu2_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
+                        exp(-(norm([idx - bmu2_ind.xpos, jdx - bmu2_ind.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
                     
                     % update weights for the current neuron in the BMU
                     
@@ -416,8 +447,8 @@ while(1)
                     for isom1 = 1:NET_SIZE
                         for jsom1 = 1:NET_SIZE
                             
-                            % compute new weight
-                            som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1)+KAPPA*(som2(idx, jdx).at*som1(idx, jdx).at);
+                            % update weight using Hebbian learning rule
+                            som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + KAPPA*som2(idx, jdx).at*som1(idx, jdx).at;
                         end
                     end
                     
