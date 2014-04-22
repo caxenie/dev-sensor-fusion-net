@@ -16,43 +16,61 @@ p1 = -p1;
 % variables in the network
 
 % types of relations
-temporal = 0;
-algebraic = 1;
-trigo = 2;
+temporal = 1;
+algebraic = 2;
+trigo = 3;
 
+c_type = [temporal, algebraic, trigo];
+c_type_idx = length(c_type);
+
+while(c_type_idx>=1)
 % set type
-correlation_type = algebraic;
+correlation_type = c_type(c_type_idx);
 
 switch correlation_type
     case temporal
-            % second variable (integral - accumulation @ 25Hz -> shift in freq)
-            sample_freq = 25; % Hz
-            sample_time = 1/sample_freq;
-            p2 = zeros(1, length(test_data));
-            p2(1) = p1(1);
-            % compute the absolute value (Euler)
-            for i=2:length(test_data)
-                p2(i) = p2(i-1) + ...
-                    (sample_time*(p1(i)));
-            end
+        % second variable (integral - accumulation @ 25Hz -> shift in freq)
+        sample_freq = 25; % Hz
+        sample_time = 1/sample_freq;
+        p2 = zeros(1, length(test_data));
+        p2(1) = p1(1);
+        % compute the absolute value (Euler)
+        for i=2:length(test_data)
+            p2(i) = p2(i-1) + ...
+                (sample_time*(p1(i)));
+        end
+        % measure the cross-correlation between the vars
+        temporal_xcorr = xcorr(p1, p2);
+        p2_temporal = p2;
     case algebraic
-            % second variable might be linked to the first one using an algebraic
-            % relationship - sample
-            p2 = 3*p1 - 5;
+        % second variable might be linked to the first one using an algebraic
+        % relationship - sample
+        p2 = 3*p1 - 5;
+        % measure the cross-correlation between the vars
+        algebraic_xcorr = xcorr(p1, p2);
+        p2_algebraic = p2;
     case trigo
-            % second varible is linked to the first using a trigonometric
-            % relationship - sample 
-            p2 = 4.5*sin(p1/5) + 6.5;
+        % second varible is linked to the first using a trigonometric
+        % relationship - sample
+        p2 = 4.5*sin(p1/5) + 6.5;
+        % measure the cross-correlation between the vars
+        trigo_xcorr = xcorr(p1, p2);
+        p2_trigo = p2;
 end % type switch
+% switch type
+c_type_idx = c_type_idx - 1;
+end
 
 %% RUNTIME FLAGS
 
 % visualization of the input data
-input_vis = 0;
+verbose = 0;
+% visualization of the correlation analysis
+xcorr_verbose = 1;
 
 %% INPUT DATA VISUALIZATION
 
-if(input_vis==1)
+if(verbose==1)
     % visualize input data
     in_vis = figure(1);
     set(gcf, 'color', 'white');
@@ -63,18 +81,46 @@ if(input_vis==1)
     ylabel('Samples');
 end
 
+if(xcorr_verbose==1)
+    % visualize cross-correlation
+    xcorr_vis = figure(2);
+    set(gcf, 'color', 'white');
+    subplot(6, 2, 1);plot(p1, '.b'); box off; grid off;
+    title('P1 var');
+    subplot(6, 2, 3);plot(p2_temporal, '.b'); box off; grid off;
+    title('P2 var');
+    subplot(6, 2, [2,4]);plot(temporal_xcorr, '.b'); box off; grid off;
+    title('Temporal xcorr analysis');
+    
+    subplot(6, 2, 5);plot(p1, '.g'); box off; grid off;
+    title('P1 var');
+    subplot(6, 2, 7);plot(p2_algebraic, '.g'); box off; grid off;
+    title('P2 var');
+    subplot(6, 2, [6,8]);plot(algebraic_xcorr, '.g'); box off; grid off;
+    title('Algebraic xcorr analysis');
+    
+    subplot(6, 2, 9);plot(p1, '.r'); box off; grid off;
+    title('P1 var');
+    subplot(6, 2, 11);plot(p2_trigo, '.r'); box off; grid off;
+    title('P2 var');
+    subplot(6, 2, [10,12]);plot(trigo_xcorr, '.r'); box off; grid off;
+    title('Trigonometric xcorr analysis');
+    ylabel('Samples');
+end
+
+return
 %% NETWORK STRUCTURE
 
 % for rectangular lattice
-NET_SIZE      = 10;
+NET_SIZE      = 5;
 % net parameters for structure and learning
 NET_SIZE_LONG = NET_SIZE;  % network lattice size long
 NET_SIZE_LAT  = NET_SIZE;  % network lattice size wide
 ALPHA0        = 0.1; % learning rate initialization
-SIGMA0        = max(NET_SIZE_LONG, NET_SIZE_LAT)/2; % intial radius size
-IN_SIZE       = 20; % input vector size = samples to bind in the input vector
-MAX_EPOCHS    = 10; % epochs to run
-LAMBDA        = 1000/log(SIGMA0); % time constant for radius adaptation
+SIGMA0        = max(NET_SIZE_LONG, NET_SIZE_LAT)/2 + 1; % intial radius size
+IN_SIZE       = 10; % input vector size = samples to bind in the input vector
+MAX_EPOCHS    = 500*NET_SIZE; % epochs to run
+LAMBDA        = MAX_EPOCHS/log(SIGMA0); % time constant for radius adaptation
 
 % iterator for relaxation
 net_epochs    = 1;  % init counter for epochs
@@ -243,18 +289,22 @@ sum_norm_W1 = zeros(1, IN_SIZE); sum_norm_W2 = zeros(1, IN_SIZE);
 sum_norm_H1 = zeros(1, IN_SIZE); sum_norm_H2 = zeros(1, IN_SIZE);
 
 % cross modal influence factor
-GAMA = 0.1;
+GAMA = 0.35;
 % inhibitory component weight in weight update
-XI = 0.3;
+XI = 0.27;
 % gain factor in Hebbian weight update
-KAPPA = 0.4;
+KAPPA = 0.23;
 
 % training phase
 while(1)
     if(net_epochs <= MAX_EPOCHS)
+        % start timer
+        start_epoch = tic;
         % index of each entry in the sampled input vectors
         % we have length(in)/IN_SIZE vectors of size IN_SIZE
         for data_idx = 1:training_set_size
+            % start timer for input vector entries presented to the net
+            start_input_entry  = tic;
             % max quantization error init
             qe_max1_dir = Inf; qe_max2_dir = Inf;
             qe_max1_ind = Inf; qe_max2_ind = Inf;
@@ -324,15 +374,20 @@ while(1)
                     %-------------------------------------------------------------------------------
                     % use the same leraning parameters for both SOM
                     % compute the learning rate @ current epoch
-                    ALPHA(net_epochs) = ALPHA0*exp(-net_epochs/TAU);
+                    
+                    % exponential learning rate adaptation
+                    % ALPHA(net_epochs) = ALPHA0*exp(-net_epochs/TAU);
+                    % semi-empirical learning rate adaptation
+                    A = MAX_EPOCHS/100.0; B = A;
+                    ALPHA(net_epochs) = A/(net_epochs + B);
+                    
                     % compute the neighborhood radius size @ current epoch
                     SIGMA(net_epochs) = SIGMA0*exp(-net_epochs/LAMBDA);
                     %-------------------------------------------------------------------------------
                     % fist SOM activations
                     % compute the direct activation - neighborhood kernel
                     som1(idx, jdx).ad = ALPHA(net_epochs)*...
-                        1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu1_dir.xpos, jdx - bmu1_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2)))*(1 - qe1_dir(idx, jdx));
+                        exp(-(norm([bmu1_dir.xpos - idx, bmu1_dir.ypos - jdx]))^2/(2*(SIGMA(net_epochs)^2)))*(1 - qe1_dir(idx, jdx));
                     
                     % compute the indirect activation (from all other units in SOM2)
                     % first compute the total activation from the other SOM
@@ -350,10 +405,8 @@ while(1)
                     % compute the joint activation from both input space
                     % and cross-modal Hebbian linkage
                     
-                    som1(idx, jdx).at = (1 - GAMA)*1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu1_dir.xpos, jdx - bmu1_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2))) + ...
-                        GAMA*1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu1_ind.xpos, jdx - bmu1_ind.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
+                    som1(idx, jdx).at = (1 - GAMA)*exp(-(norm([bmu1_dir.xpos - idx, bmu1_dir.ypos - jdx]))^2/(2*(SIGMA(net_epochs)^2))) + ...
+                        GAMA*exp(-(norm([bmu1_ind.xpos - idx,  bmu1_ind.ypos - jdx]))^2/(2*(SIGMA(net_epochs)^2)));
                     
                     % update weights for the current neuron in the BMU
                     
@@ -394,8 +447,7 @@ while(1)
                     
                     % compute the direct activation - neighborhood kernel
                     som2(idx, jdx).ad = ALPHA(net_epochs)*...
-                        1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu2_dir.xpos, jdx - bmu2_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2)))*(1-qe2_dir(idx, jdx));
+                        exp(-(norm([bmu2_dir.xpos - idx, bmu2_dir.ypos - jdx]))^2/(2*(SIGMA(net_epochs)^2)))*(1-qe2_dir(idx, jdx));
                     
                     % compute the indirect activation (from all other units in SOM2)
                     % first compute the total activation from the other SOM
@@ -413,10 +465,8 @@ while(1)
                     % compute the joint activation from both input space
                     % and cross-modal Hebbian linkage
                     
-                    som2(idx, jdx).at = (1 - GAMA)*1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu2_dir.xpos, jdx - bmu2_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2))) + ...
-                        GAMA* 1/(sqrt(2*pi)*SIGMA(net_epochs))*...
-                        exp(-(norm([idx - bmu2_ind.xpos, jdx - bmu2_ind.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
+                    som2(idx, jdx).at = (1 - GAMA)*exp(-(norm([idx - bmu2_dir.xpos, jdx - bmu2_dir.ypos]))^2/(2*(SIGMA(net_epochs)^2))) + ...
+                        GAMA*exp(-(norm([idx - bmu2_ind.xpos, jdx - bmu2_ind.ypos]))^2/(2*(SIGMA(net_epochs)^2)));
                     
                     % update weights for the current neuron in the BMU
                     
@@ -455,13 +505,23 @@ while(1)
                     %-------------------------------------------------------------------------------
                 end
             end
-            
+            % elapsed time to propagate all values from input vector
+            elapsed_time_input_vector = toc(start_input_entry);
+            if(verbose==1)
+                fprintf('Elapsed time for data entry %d is %d secs \n', data_idx, elapsed_time_input_vector);
+            end
         end % for each entry in the training set
+        
         % increment epochs counter
         net_epochs = net_epochs + 1;
+        
+        % elapsed time to propagate all values from input vector
+        elapsed_time_epoch = toc(start_epoch);
+        if(verbose==1)
+            fprintf('--> Elapsed time for epoch %d is %d secs \n', net_epochs-1, elapsed_time_epoch);
+        end
     else
         disp 'Finalized learning phase.';
         break;
     end
 end
-
