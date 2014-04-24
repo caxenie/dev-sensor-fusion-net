@@ -12,6 +12,12 @@ scaling_factor = 1000;
 p1 = (test_data(:,7)*(180/pi))/scaling_factor;
 p1 = -p1;
 
+% input type flag
+interval_seq = 1;
+sliding_seq = 2;
+% select input type
+input_type = sliding_seq;
+
 % test flag to implement different raltionships between the 2 encoded
 % variables in the network
 
@@ -23,50 +29,93 @@ trigo = 3;
 c_type = [temporal, algebraic, trigo];
 c_type_idx = length(c_type);
 
-while(c_type_idx>=1)
-% set type
-correlation_type = c_type(c_type_idx);
+% correlation analysis flag
+correlation_analysis = 0;
 
-switch correlation_type
-    case temporal
-        % second variable (integral - accumulation @ 25Hz -> shift in freq)
-        sample_freq = 25; % Hz
-        sample_time = 1/sample_freq;
-        p2 = zeros(1, length(test_data));
-        p2(1) = p1(1);
-        % compute the absolute value (Euler)
-        for i=2:length(test_data)
-            p2(i) = p2(i-1) + ...
-                (sample_time*(p1(i)));
-        end
-        % measure the cross-correlation between the vars
-        temporal_xcorr = xcorr(p1, p2);
-        p2_temporal = p2;
-    case algebraic
-        % second variable might be linked to the first one using an algebraic
-        % relationship - sample
-        p2 = 3*p1 - 5;
-        % measure the cross-correlation between the vars
-        algebraic_xcorr = xcorr(p1, p2);
-        p2_algebraic = p2;
-    case trigo
-        % second varible is linked to the first using a trigonometric
-        % relationship - sample
-        p2 = 4.5*sin(p1/5) + 6.5;
-        % measure the cross-correlation between the vars
-        trigo_xcorr = xcorr(p1, p2);
-        p2_trigo = p2;
-end % type switch
-% switch type
-c_type_idx = c_type_idx - 1;
+% check if performing correlation analysis
+if correlation_analysis == 1
+    while(c_type_idx>=1)
+        % set type
+        correlation_type = c_type(c_type_idx);
+        
+        switch correlation_type
+            case temporal
+                % second variable (integral - accumulation @ 25Hz -> shift in freq)
+                sample_freq = 25; % Hz
+                sample_time = 1/sample_freq;
+                p2 = zeros(1, length(test_data));
+                p2(1) = p1(1);
+                % compute the absolute value (Euler)
+                for i=2:length(test_data)
+                    p2(i) = p2(i-1) + ...
+                        (sample_time*(p1(i)));
+                end
+                % measure the cross-correlation between the vars
+                temporal_xcorr = xcorr(p1, p2);
+                p2_temporal = p2;
+            case algebraic
+                % second variable might be linked to the first one using an algebraic
+                % relationship - sample
+                p2 = 3*p1 - 5;
+                % measure the cross-correlation between the vars
+                algebraic_xcorr = xcorr(p1, p2);
+                p2_algebraic = p2;
+            case trigo
+                % second varible is linked to the first using a trigonometric
+                % relationship - sample
+                p2 = 4.5*sin(p1/5) + 6.5;
+                % measure the cross-correlation between the vars
+                trigo_xcorr = xcorr(p1, p2);
+                p2_trigo = p2;
+        end % type switch
+        % switch type
+        c_type_idx = c_type_idx - 1;
+    end
+    
+else % not performing correlation analysis
+    % set type
+    correlation_type = algebraic;
+    switch correlation_type
+        case temporal
+            % second variable (integral - accumulation @ 25Hz -> shift in freq)
+            sample_freq = 25; % Hz
+            sample_time = 1/sample_freq;
+            p2 = zeros(1, length(test_data));
+            p2(1) = p1(1);
+            % compute the absolute value (Euler)
+            for i=2:length(test_data)
+                p2(i) = p2(i-1) + ...
+                    (sample_time*(p1(i)));
+            end
+            % measure the cross-correlation between the vars
+            temporal_xcorr = xcorr(p1, p2);
+            p2_temporal = p2;
+        case algebraic
+            % second variable might be linked to the first one using an algebraic
+            % relationship - sample
+            p2 = 3*p1 - 5;
+            % measure the cross-correlation between the vars
+            algebraic_xcorr = xcorr(p1, p2);
+            p2_algebraic = p2;
+        case trigo
+            % second varible is linked to the first using a trigonometric
+            % relationship - sample
+            p2 = 4.5*sin(p1/5) + 6.5;
+            % measure the cross-correlation between the vars
+            trigo_xcorr = xcorr(p1, p2);
+            p2_trigo = p2;
+    end % type switch
+    % switch type
+    c_type_idx = c_type_idx - 1;
 end
+
 
 %% RUNTIME FLAGS
 
 % visualization of the input data
 verbose = 0;
 % visualization of the correlation analysis
-xcorr_verbose = 1;
+xcorr_verbose = 0;
 
 %% INPUT DATA VISUALIZATION
 
@@ -108,7 +157,6 @@ if(xcorr_verbose==1)
     ylabel('Samples');
 end
 
-return
 %% NETWORK STRUCTURE
 
 % for rectangular lattice
@@ -118,7 +166,7 @@ NET_SIZE_LONG = NET_SIZE;  % network lattice size long
 NET_SIZE_LAT  = NET_SIZE;  % network lattice size wide
 ALPHA0        = 0.1; % learning rate initialization
 SIGMA0        = max(NET_SIZE_LONG, NET_SIZE_LAT)/2 + 1; % intial radius size
-IN_SIZE       = 10; % input vector size = samples to bind in the input vector
+IN_SIZE       = 101; % input vector size = samples to bind in the input vector
 MAX_EPOCHS    = 500*NET_SIZE; % epochs to run
 LAMBDA        = MAX_EPOCHS/log(SIGMA0); % time constant for radius adaptation
 
@@ -246,21 +294,62 @@ bmu2_dir.at = MIN_P2 + (MAX_P2 - MIN_P2)*rand;
 
 %% NETWORK DYNAMICS
 
-% split the input vectors in training vectors of size IN_SIZE
-training_set_size = round(length(p1)/IN_SIZE);
-training_set_p1 = zeros(round(length(p1)/IN_SIZE), IN_SIZE);
-training_set_p2 = zeros(round(length(p2)/IN_SIZE), IN_SIZE);
 
-training_set_p1(1, :) = p1(1:IN_SIZE);
-training_set_p2(1, :) = p2(1:IN_SIZE);
+% check what input type is applied to the SOMs
 
-% fill the training datasets
-for idx = 2:training_set_size
-    for jdx = 1:IN_SIZE
-        training_set_p1(idx, jdx) = p1(((idx-1)*IN_SIZE + jdx));
-        training_set_p2(idx, jdx) = p2(((idx-1)*IN_SIZE + jdx));
-    end
+switch(input_type)
+    case interval_seq
+        % use two types of inputs for the SOMs
+        % -----------------------------------------------------------------------------
+        % first we can use equally spaced intervals of IN_SIZE samples from the original
+        % input signal
+        
+        % split the input vectors in training vectors of size IN_SIZE
+        training_set_size = round(length(p1)/IN_SIZE);
+        training_set_p1 = zeros(round(length(p1)/IN_SIZE), IN_SIZE);
+        training_set_p2 = zeros(round(length(p2)/IN_SIZE), IN_SIZE);
+        
+        training_set_p1(1, :) = p1(1:IN_SIZE);
+        training_set_p2(1, :) = p2(1:IN_SIZE);
+        
+        % fill the training datasets
+        for idx = 2:training_set_size
+            for jdx = 1:IN_SIZE
+                training_set_p1(idx, jdx) = p1(((idx-1)*IN_SIZE + jdx));
+                training_set_p2(idx, jdx) = p2(((idx-1)*IN_SIZE + jdx));
+            end
+        end
+        
+    case sliding_seq
+        
+        % -----------------------------------------------------------------------------
+        % second we can use a sliding window with a size of IN_SIZE samples and a time
+        % delay of TAU_SLIDE
+        
+        TAU_SLIDE = 7   ; % TAU_SLIDE < IN_SIZE
+        
+        training_set_size = round(length(p1)/TAU_SLIDE);
+        training_set_p1 = zeros(training_set_size, IN_SIZE);
+        training_set_p2 = zeros(training_set_size, IN_SIZE);
+       
+        training_set_p1(1, :) = p1(1:IN_SIZE);
+        training_set_p2(1, :) = p2(1:IN_SIZE);
+                      
+        iidx = 1;
+        
+        % fill the training datasets
+        for idx = 2:(training_set_size-IN_SIZE)
+            for jdx = 1:IN_SIZE
+                training_set_p1(idx, jdx) = p1(((iidx)*TAU_SLIDE + jdx));
+                training_set_p2(idx, jdx) = p2(((iidx)*TAU_SLIDE + jdx));
+            end
+            iidx = iidx + 1;
+        end
+        
+        % -----------------------------------------------------------------------------(
 end
+
+return
 
 % in the same loop train SOM1 and SOM2 and cross-SOM interaction
 % the units which will be attracted towards the inputs will be the ones
