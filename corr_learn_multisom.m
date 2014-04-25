@@ -113,7 +113,7 @@ end
 %% RUNTIME FLAGS
 
 % visualization of the input data
-verbose = 0;
+verbose = 1;
 % visualization of the correlation analysis
 xcorr_verbose = 0;
 
@@ -160,14 +160,14 @@ end
 %% NETWORK STRUCTURE
 
 % for rectangular lattice
-NET_SIZE      = 5;
+NET_SIZE      = 10;
 % net parameters for structure and learning
 NET_SIZE_LONG = NET_SIZE;  % network lattice size long
 NET_SIZE_LAT  = NET_SIZE;  % network lattice size wide
 ALPHA0        = 0.1; % learning rate initialization
 SIGMA0        = max(NET_SIZE_LONG, NET_SIZE_LAT)/2 + 1; % intial radius size
 IN_SIZE       = 100; % input vector size = samples to bind in the input vector
-MAX_EPOCHS    = 500*NET_SIZE; % epochs to run
+MAX_EPOCHS    = 5*NET_SIZE; % epochs to run handbook knowledge says ~500xNET_SIZE
 LAMBDA        = MAX_EPOCHS/log(SIGMA0); % time constant for radius adaptation
 
 % iterator for relaxation
@@ -375,8 +375,6 @@ else
     end
     title('Sample training vectors for input p1 vs p2');
 end
-
-return;
 
 % in the same loop train SOM1 and SOM2 and cross-SOM interaction
 % the units which will be attracted towards the inputs will be the ones
