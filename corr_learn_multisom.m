@@ -16,7 +16,7 @@ p1 = -p1;
 interval_seq = 1;
 sliding_seq = 2;
 % select input type
-input_type = sliding_seq;
+input_type = interval_seq;
 
 % test flag to implement different raltionships between the 2 encoded
 % variables in the network
@@ -166,7 +166,7 @@ NET_SIZE_LONG = NET_SIZE;  % network lattice size long
 NET_SIZE_LAT  = NET_SIZE;  % network lattice size wide
 ALPHA0        = 0.1; % learning rate initialization
 SIGMA0        = max(NET_SIZE_LONG, NET_SIZE_LAT)/2 + 1; % intial radius size
-IN_SIZE       = 101; % input vector size = samples to bind in the input vector
+IN_SIZE       = 100; % input vector size = samples to bind in the input vector
 MAX_EPOCHS    = 500*NET_SIZE; % epochs to run
 LAMBDA        = MAX_EPOCHS/log(SIGMA0); % time constant for radius adaptation
 
@@ -305,9 +305,9 @@ switch(input_type)
         % input signal
         
         % split the input vectors in training vectors of size IN_SIZE
-        training_set_size = round(length(p1)/IN_SIZE);
-        training_set_p1 = zeros(round(length(p1)/IN_SIZE), IN_SIZE);
-        training_set_p2 = zeros(round(length(p2)/IN_SIZE), IN_SIZE);
+        training_set_size = round(length(p1)/IN_SIZE-1);
+        training_set_p1 = zeros(training_set_size, IN_SIZE);
+        training_set_p2 = zeros(training_set_size, IN_SIZE);
         
         training_set_p1(1, :) = p1(1:IN_SIZE);
         training_set_p2(1, :) = p2(1:IN_SIZE);
@@ -326,30 +326,57 @@ switch(input_type)
         % second we can use a sliding window with a size of IN_SIZE samples and a time
         % delay of TAU_SLIDE
         
-        TAU_SLIDE = 7   ; % TAU_SLIDE < IN_SIZE
+        TAU_SLIDE = 10; % CAREFUL! TAU_SLIDE < IN_SIZE
         
-        training_set_size = round(length(p1)/TAU_SLIDE);
+        training_set_size = round(2*length(p1)/IN_SIZE)*TAU_SLIDE;
         training_set_p1 = zeros(training_set_size, IN_SIZE);
         training_set_p2 = zeros(training_set_size, IN_SIZE);
        
         training_set_p1(1, :) = p1(1:IN_SIZE);
         training_set_p2(1, :) = p2(1:IN_SIZE);
-                      
+               
         iidx = 1;
         
         % fill the training datasets
-        for idx = 2:(training_set_size-IN_SIZE)
+        for idx = 2:(training_set_size)
             for jdx = 1:IN_SIZE
                 training_set_p1(idx, jdx) = p1(((iidx)*TAU_SLIDE + jdx));
                 training_set_p2(idx, jdx) = p2(((iidx)*TAU_SLIDE + jdx));
             end
-            iidx = iidx + 1;
+            if(mod(idx,2)==0)
+                iidx = iidx + 1;
+            end
+            if(((iidx)*TAU_SLIDE + IN_SIZE)>length(p1))
+                break;
+            end
         end
         
         % -----------------------------------------------------------------------------(
 end
 
-return
+% visualize some training input samples
+SAMPLE_DATA_CHUNKS = 10;
+if input_type==interval_seq
+    START_IDX = 24;
+    figure;
+    for idx = 1:SAMPLE_DATA_CHUNKS
+        subplot(1,SAMPLE_DATA_CHUNKS,idx); set(gcf, 'color', 'white'); box off; grid off; 
+        plot(training_set_p1(START_IDX+idx, :), 'r'); hold on;
+        plot(training_set_p2(START_IDX+idx, :), 'b');
+    end
+    title('Sample training vectors for input p1 vs p2');
+else
+    START_IDX = 300;
+    figure;
+    for idx = 1:SAMPLE_DATA_CHUNKS
+        subplot(1,SAMPLE_DATA_CHUNKS,idx); set(gcf, 'color', 'white'); box off; grid off; 
+        plot(training_set_p1(START_IDX+idx*TAU_SLIDE, :), 'r'); hold on;
+        plot(training_set_p2(START_IDX+idx*TAU_SLIDE, :), 'b');
+    end
+    title('Sample training vectors for input p1 vs p2');
+end
+
+return;
 
 % in the same loop train SOM1 and SOM2 and cross-SOM interaction
 % the units which will be attracted towards the inputs will be the ones
