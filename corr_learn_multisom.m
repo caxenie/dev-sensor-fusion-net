@@ -639,3 +639,68 @@ while(1)
         break;
     end
 end
+
+%% VISUALIZATION
+% maps data and other useful parameters
+
+% first SOM
+figure; set(gcf, 'color', 'white'); box off; grid off;
+% plot the learning learning adaptation
+subplot(3, 6, 1); plot(ALPHA, '.b');
+% plot the neighborhood kernel radius adaptation 
+subplot(3, 6, 7); plot(SIGMA, '.r');
+% total activity in each neurons in the SOM
+subplot(3, 6, [3,4]);
+at_vis = zeros(NET_SIZE, NET_SIZE);
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        at_vis(idx, jdx) = som1(idx, jdx).at;
+    end
+end
+imagesc((at_vis(1:NET_SIZE, 1:NET_SIZE)));
+colormap;
+% direct activity elicited by sensory projections (plastic connections)
+subplot(3, 6, [8,9]);
+ad_vis = zeros(NET_SIZE, NET_SIZE);
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        ad_vis(idx, jdx) = som1(idx, jdx).ad;
+    end
+end
+imagesc((ad_vis(1:NET_SIZE, 1:NET_SIZE))); set(gcf, 'color', 'white');
+colormap;
+% indirect activity elicited by cross-modal Hebbian linkage (plastic connections)
+subplot(3, 6, [11, 12]);
+ai_vis = zeros(NET_SIZE, NET_SIZE);
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        ai_vis(idx, jdx) = som1(idx, jdx).ai;
+    end
+end
+imagesc((ai_vis(1:NET_SIZE, 1:NET_SIZE))); set(gcf, 'color', 'white');
+colormap;
+% synaptic connections strenghts from sensory projections (W weight matrix)
+subplot(3, 6, [14, 15]);
+W_vis_elem = zeros(NET_SIZE, NET_SIZE, NET_SIZE, NET_SIZE);
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        for elem_idx = 1:NET_SIZE
+               W_vis_elem(idx, jdx, elem_idx) = som1(idx, jdx).W(elem_idx);
+               scatter3(idx, jdx, elem_idx, 30, W_vis_elem(idx, jdx, elem_idx), 'filled'); hold on; colorbar; set(gcf, 'color', 'white');
+        end
+    end
+end
+
+% synaptic connections strenghts from cross modal Hebbian interaction (H weight matrix)
+subplot(3, 6, [17, 18]);
+H_vis = zeros(NET_SIZE, NET_SIZE);
+H_vis_elem = zeros(NET_SIZE, NET_SIZE, NET_SIZE, NET_SIZE);
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        for idx_elem = 1:NET_SIZE
+            for jdx_elem = 1:NET_SIZE
+                H_vis_elem(idx, jdx, idx_elem, jdx_elem) = som1(idx, jdx).H(idx_elem, jdx_elem);
+            end
+        end
+    end
+end
