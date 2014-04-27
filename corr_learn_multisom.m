@@ -8,6 +8,8 @@ test_data = load('robot_data_jras_paper');
 
 % first variable (derivative - rate of change @ 20Hz, e.g. gyro)
 scaling_factor = 1000;
+% sampling frequency
+sampling_freq = 25; % Hz
 % scale the data
 p1 = (test_data(:,7)*(180/pi))/scaling_factor;
 p1 = -p1;
@@ -643,44 +645,51 @@ end
 %% VISUALIZATION
 % maps data and other useful parameters
 
+% replace sample based represeantaion with actual time representation
+time_units = [1:length(p1)]./sample_freq;
 % first SOM
 figure; set(gcf, 'color', 'white'); box off; grid off;
+% display template 
+COLS = 6; ROWS = 6;
+% plot the input data
+subplot(ROWS, COLS, [1,8]); plot(time_units, p1, '.k'); title('Input signal'); xlabel('Time (s)');  grid off; box off;
 % plot the learning learning adaptation
-subplot(3, 6, 1); plot(ALPHA, '.b');
+subplot(ROWS, COLS, [5,12]); plot(ALPHA, '.b');
 % plot the neighborhood kernel radius adaptation 
-subplot(3, 6, 7); plot(SIGMA, '.r');
+hold on; plot(SIGMA, '.r'); title('Adaptation parameters'); xlabel('Epochs');
+legend('Learning rate','Neighborhood kernel radius'); box off;
 % total activity in each neurons in the SOM
-subplot(3, 6, [3,4]);
+subplot(ROWS, COLS, [3,10]);
 at_vis = zeros(NET_SIZE, NET_SIZE);
 for idx = 1:NET_SIZE
     for jdx = 1:NET_SIZE
         at_vis(idx, jdx) = som1(idx, jdx).at;
     end
 end
-imagesc((at_vis(1:NET_SIZE, 1:NET_SIZE)));
-colormap;
+imagesc((at_vis(1:NET_SIZE, 1:NET_SIZE))); colorbar; axis xy; 
+colormap; box off; title('Total (joint) activity in the network');
 % direct activity elicited by sensory projections (plastic connections)
-subplot(3, 6, [8,9]);
+subplot(ROWS, COLS, [13, 20]);
 ad_vis = zeros(NET_SIZE, NET_SIZE);
 for idx = 1:NET_SIZE
     for jdx = 1:NET_SIZE
         ad_vis(idx, jdx) = som1(idx, jdx).ad;
     end
 end
-imagesc((ad_vis(1:NET_SIZE, 1:NET_SIZE))); set(gcf, 'color', 'white');
-colormap;
+imagesc((ad_vis(1:NET_SIZE, 1:NET_SIZE))); set(gcf, 'color', 'white'); colorbar; axis xy; 
+colormap; box off; title('Sensory elicited activity');
 % indirect activity elicited by cross-modal Hebbian linkage (plastic connections)
-subplot(3, 6, [11, 12]);
+subplot(ROWS, COLS, [17, 24]);
 ai_vis = zeros(NET_SIZE, NET_SIZE);
 for idx = 1:NET_SIZE
     for jdx = 1:NET_SIZE
         ai_vis(idx, jdx) = som1(idx, jdx).ai;
     end
 end
-imagesc((ai_vis(1:NET_SIZE, 1:NET_SIZE))); set(gcf, 'color', 'white');
-colormap;
+imagesc((ai_vis(1:NET_SIZE, 1:NET_SIZE))); set(gcf, 'color', 'white');colorbar; axis xy; 
+colormap; box off; title('Cross-modal elicited activity');
 % synaptic connections strenghts from sensory projections (W weight matrix)
-subplot(3, 6, [14, 15]);
+subplot(ROWS, COLS, [26, 33]);
 W_vis_elem = zeros(NET_SIZE, NET_SIZE, NET_SIZE, NET_SIZE);
 for idx = 1:NET_SIZE
     for jdx = 1:NET_SIZE
@@ -690,9 +699,10 @@ for idx = 1:NET_SIZE
         end
     end
 end
+box off; title('Synaptic connection weights for sensory projections'); axis xy; axis equal;
 
 % synaptic connections strenghts from cross modal Hebbian interaction (H weight matrix)
-subplot(3, 6, [17, 18]);
+subplot(ROWS, COLS, [29,35]);
 H_vis = zeros(NET_SIZE, NET_SIZE);
 H_vis_elem = zeros(NET_SIZE, NET_SIZE, NET_SIZE, NET_SIZE);
 for idx = 1:NET_SIZE
@@ -700,7 +710,9 @@ for idx = 1:NET_SIZE
         for idx_elem = 1:NET_SIZE
             for jdx_elem = 1:NET_SIZE
                 H_vis_elem(idx, jdx, idx_elem, jdx_elem) = som1(idx, jdx).H(idx_elem, jdx_elem);
+                scatter3(idx, jdx, idx_elem, 30, W_vis_elem(idx, jdx, elem_idx), 'filled'); hold on; colorbar; set(gcf, 'color', 'white');
             end
         end
     end
 end
+box off; title('Synaptic connection weights for cross-modal (Hebbian) linkage'); axis xy; axis equal;
