@@ -695,7 +695,8 @@ for idx = 1:NET_SIZE
     for jdx = 1:NET_SIZE
         for elem_idx = 1:NET_SIZE
                W_vis_elem(idx, jdx, elem_idx) = som1(idx, jdx).W(elem_idx);
-               scatter3(idx, jdx, elem_idx, 30, W_vis_elem(idx, jdx, elem_idx), 'filled'); hold on; colorbar; set(gcf, 'color', 'white');
+               scatter3(idx, jdx, elem_idx, 30, W_vis_elem(idx, jdx, elem_idx), 'filled'); 
+               hold on; colorbar; set(gcf, 'color', 'white');
         end
     end
 end
@@ -705,14 +706,28 @@ box off; title('Synaptic connection weights for sensory projections'); axis xy; 
 subplot(ROWS, COLS, [29,35]);
 H_vis = zeros(NET_SIZE, NET_SIZE);
 H_vis_elem = zeros(NET_SIZE, NET_SIZE, NET_SIZE, NET_SIZE);
+% connectivity matrix
+cross_idx=1;
 for idx = 1:NET_SIZE
     for jdx = 1:NET_SIZE
         for idx_elem = 1:NET_SIZE
             for jdx_elem = 1:NET_SIZE
                 H_vis_elem(idx, jdx, idx_elem, jdx_elem) = som1(idx, jdx).H(idx_elem, jdx_elem);
-                scatter3(idx, jdx, idx_elem, 30, W_vis_elem(idx, jdx, elem_idx), 'filled'); hold on; colorbar; set(gcf, 'color', 'white');
+                scatter3(idx, jdx, idx_elem, 30, W_vis_elem(idx, jdx, elem_idx), 'filled'); 
+                hold on; colorbar; set(gcf, 'color', 'white');
+                % find the stronger synaptic efficacies from the current network to the
+                % second one, with location and strength
+                % get maximum value of weight and global position
+                [maxH, idx_maxH] = max(H_vis_elem(idx, jdx, :));
+                % transform position into indices
+                [isom2, jsom2] = ind2sub(size(H_vis_elem), idx_maxH);
+                % fill in the connectivity matrix
+                cross_link(cross_idx, :) = [idx, jdx, isom2, jsom2, maxH];
+                cross_idx = cross_idx + 1;
             end
         end
     end
 end
+
+
 box off; title('Synaptic connection weights for cross-modal (Hebbian) linkage'); axis xy; axis equal;
