@@ -644,7 +644,7 @@ end
 
 %% VISUALIZATION
 % maps data and other useful parameters
-
+% -------------------------------------------------------------------------------------------------------------------------
 % replace sample based represeantaion with actual time representation
 time_units = [1:length(p1)]./sample_freq;
 % first SOM
@@ -703,31 +703,147 @@ end
 box off; title('Synaptic connection weights for sensory projections'); axis xy; axis equal;
 
 % synaptic connections strenghts from cross modal Hebbian interaction (H weight matrix)
-subplot(ROWS, COLS, [29,35]);
-H_vis = zeros(NET_SIZE, NET_SIZE);
+subplot(ROWS, COLS, [28,35]);
+
 H_vis_elem = zeros(NET_SIZE, NET_SIZE, NET_SIZE, NET_SIZE);
-% connectivity matrix
-cross_idx=1;
+
 for idx = 1:NET_SIZE
     for jdx = 1:NET_SIZE
         for idx_elem = 1:NET_SIZE
             for jdx_elem = 1:NET_SIZE
                 H_vis_elem(idx, jdx, idx_elem, jdx_elem) = som1(idx, jdx).H(idx_elem, jdx_elem);
-                scatter3(idx, jdx, idx_elem, 30, W_vis_elem(idx, jdx, elem_idx), 'filled'); 
-                hold on; colorbar; set(gcf, 'color', 'white');
-                % find the stronger synaptic efficacies from the current network to the
-                % second one, with location and strength
-                % get maximum value of weight and global position
-                [maxH, idx_maxH] = max(H_vis_elem(idx, jdx, :));
-                % transform position into indices
-                [isom2, jsom2] = ind2sub(size(H_vis_elem), idx_maxH);
-                % fill in the connectivity matrix
-                cross_link(cross_idx, :) = [idx, jdx, isom2, jsom2, maxH];
-                cross_idx = cross_idx + 1;
             end
         end
     end
 end
 
+% group everything in a horizontal matrix
+temp_horz = [];
+temp_proj_mat = [];
+for iidx = 1:NET_SIZE
+    for ijdx = 1:NET_SIZE
+        % extract the (iidx, ijdx) th entry in the multidim matrix
+        temp_lin_submat = H_vis_elem(iidx, ijdx, :);
+        % remove singleton dimensions
+        temp_lin_squeezed = squeeze(temp_lin_submat);
+        % restore indices and value in NET_SIZExNET_SIZE matrix
+        for idx_temp = 1:length(temp_lin_squeezed)
+            [jdx_proj, idx_proj] = ind2sub([NET_SIZE, NET_SIZE], idx_temp);
+            temp_proj_mat(idx_proj, jdx_proj) = temp_lin_squeezed(idx_temp);
+        end
+        temp_horz =  horzcat(temp_horz, temp_proj_mat);     
+    end
+end
 
-box off; title('Synaptic connection weights for cross-modal (Hebbian) linkage'); axis xy; axis equal;
+% flatten down the horizontal buffer to a square matrix for visualization
+collapsed_view = zeros(NET_SIZE*NET_SIZE, NET_SIZE*NET_SIZE);
+% linear index of the temp horizontal buffer temp_idx
+
+for temp_idx = 1:NET_SIZE*NET_SIZE*NET_SIZE*NET_SIZE
+        [conv_idx, conv_jdx] = ind2sub(size(collapsed_view), temp_idx);
+        collapsed_view(conv_idx, conv_jdx) = temp_horz(temp_idx);
+end
+
+imagesc(collapsed_view(1:NET_SIZE*NET_SIZE, 1:NET_SIZE*NET_SIZE)); hold on; colorbar; axis xy;
+colormap; box off; title('Synaptic connection weights for cross-modal interaction'); 
+
+%--------------------------------------------------------------------------------------------------------------------------
+ % second SOM
+figure; set(gcf, 'color', 'white'); box off; grid off;
+% display template 
+COLS = 6; ROWS = 6;
+% plot the input data
+subplot(ROWS, COLS, [1,8]); plot(time_units, p2, '.k'); title('Input signal'); xlabel('Time (s)');  grid off; box off;
+% plot the learning learning adaptation
+subplot(ROWS, COLS, [5,12]); plot(ALPHA, '.b');
+% plot the neighborhood kernel radius adaptation 
+hold on; plot(SIGMA, '.r'); title('Adaptation parameters'); xlabel('Epochs');
+legend('Learning rate','Neighborhood kernel radius'); box off;
+% total activity in each neurons in the SOM
+subplot(ROWS, COLS, [3,10]);
+at_vis = zeros(NET_SIZE, NET_SIZE);
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        at_vis(idx, jdx) = som2(idx, jdx).at;
+    end
+end
+imagesc((at_vis(1:NET_SIZE, 1:NET_SIZE))); colorbar; axis xy; 
+colormap; box off; title('Total (joint) activity in the network');
+% direct activity elicited by sensory projections (plastic connections)
+subplot(ROWS, COLS, [13, 20]);
+ad_vis = zeros(NET_SIZE, NET_SIZE);
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        ad_vis(idx, jdx) = som2(idx, jdx).ad;
+    end
+end
+imagesc((ad_vis(1:NET_SIZE, 1:NET_SIZE))); set(gcf, 'color', 'white'); colorbar; axis xy; 
+colormap; box off; title('Sensory elicited activity');
+% indirect activity elicited by cross-modal Hebbian linkage (plastic connections)
+subplot(ROWS, COLS, [17, 24]);
+ai_vis = zeros(NET_SIZE, NET_SIZE);
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        ai_vis(idx, jdx) = som2(idx, jdx).ai;
+    end
+end
+imagesc((ai_vis(1:NET_SIZE, 1:NET_SIZE))); set(gcf, 'color', 'white');colorbar; axis xy; 
+colormap; box off; title('Cross-modal elicited activity');
+% synaptic connections strenghts from sensory projections (W weight matrix)
+subplot(ROWS, COLS, [26, 33]);
+W_vis_elem = zeros(NET_SIZE, NET_SIZE, NET_SIZE, NET_SIZE);
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        for elem_idx = 1:NET_SIZE
+               W_vis_elem(idx, jdx, elem_idx) = som2(idx, jdx).W(elem_idx);
+               scatter3(idx, jdx, elem_idx, 30, W_vis_elem(idx, jdx, elem_idx), 'filled'); 
+               hold on; colorbar; set(gcf, 'color', 'white');
+        end
+    end
+end
+box off; title('Synaptic connection weights for sensory projections'); axis xy; axis equal;
+
+% synaptic connections strenghts from cross modal Hebbian interaction (H weight matrix)
+subplot(ROWS, COLS, [28,35]);
+
+H_vis_elem = zeros(NET_SIZE, NET_SIZE, NET_SIZE, NET_SIZE);
+
+for idx = 1:NET_SIZE
+    for jdx = 1:NET_SIZE
+        for idx_elem = 1:NET_SIZE
+            for jdx_elem = 1:NET_SIZE
+                H_vis_elem(idx, jdx, idx_elem, jdx_elem) = som2(idx, jdx).H(idx_elem, jdx_elem);
+            end
+        end
+    end
+end
+
+% group everything in a horizontal matrix
+temp_horz = [];
+temp_proj_mat = [];
+for iidx = 1:NET_SIZE
+    for ijdx = 1:NET_SIZE
+        % extract the (iidx, ijdx) th entry in the multidim matrix
+        temp_lin_submat = H_vis_elem(iidx, ijdx, :);
+        % remove singleton dimensions
+        temp_lin_squeezed = squeeze(temp_lin_submat);
+        % restore indices and value in NET_SIZExNET_SIZE matrix
+        for idx_temp = 1:length(temp_lin_squeezed)
+            [jdx_proj, idx_proj] = ind2sub([NET_SIZE, NET_SIZE], idx_temp);
+            temp_proj_mat(idx_proj, jdx_proj) = temp_lin_squeezed(idx_temp);
+        end
+        temp_horz =  horzcat(temp_horz, temp_proj_mat);     
+    end
+end
+
+% flatten down the horizontal buffer to a square matrix for visualization
+collapsed_view = zeros(NET_SIZE*NET_SIZE, NET_SIZE*NET_SIZE);
+% linear index of the temp horizontal buffer temp_idx
+
+for temp_idx = 1:NET_SIZE*NET_SIZE*NET_SIZE*NET_SIZE
+        [conv_idx, conv_jdx] = ind2sub(size(collapsed_view), temp_idx);
+        collapsed_view(conv_idx, conv_jdx) = temp_horz(temp_idx);
+end
+
+imagesc(collapsed_view(1:NET_SIZE*NET_SIZE, 1:NET_SIZE*NET_SIZE)); hold on; colorbar; axis xy;
+colormap; box off; title('Synaptic connection weights for cross-modal interaction'); 
