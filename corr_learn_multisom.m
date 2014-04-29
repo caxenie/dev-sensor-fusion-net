@@ -76,7 +76,7 @@ if correlation_analysis == 1
     
 else % not performing correlation analysis
     % set type
-    correlation_type = algebraic;
+    correlation_type = temporal;
     switch correlation_type
         case temporal
             % second variable (integral - accumulation @ 25Hz -> shift in freq)
@@ -115,7 +115,7 @@ end
 %% RUNTIME FLAGS
 
 % visualization of the input data
-verbose = 1;
+verbose = 0;
 % visualization of the correlation analysis
 xcorr_verbose = 0;
 
@@ -162,14 +162,14 @@ end
 %% NETWORK STRUCTURE
 
 % for rectangular lattice
-NET_SIZE      = 10;
+NET_SIZE      = 20;
 % net parameters for structure and learning
 NET_SIZE_LONG = NET_SIZE;  % network lattice size long
 NET_SIZE_LAT  = NET_SIZE;  % network lattice size wide
 ALPHA0        = 0.1; % learning rate initialization
 SIGMA0        = max(NET_SIZE_LONG, NET_SIZE_LAT)/2 + 1; % intial radius size
 IN_SIZE       = 100; % input vector size = samples to bind in the input vector
-MAX_EPOCHS    = 5*NET_SIZE; % epochs to run handbook knowledge says ~500xNET_SIZE
+MAX_EPOCHS    = 500*NET_SIZE; % epochs to run handbook knowledge says ~500xNET_SIZE
 LAMBDA        = MAX_EPOCHS/log(SIGMA0); % time constant for radius adaptation
 
 % iterator for relaxation
@@ -700,7 +700,7 @@ for idx = 1:NET_SIZE
         end
     end
 end
-box off; title('Synaptic connection weights for sensory projections'); axis xy; axis equal;
+box off; title('Sensory projections synaptic weights'); axis xy; axis equal;
 
 % synaptic connections strenghts from cross modal Hebbian interaction (H weight matrix)
 subplot(ROWS, COLS, [28,35]);
@@ -745,7 +745,7 @@ for temp_idx = 1:NET_SIZE*NET_SIZE*NET_SIZE*NET_SIZE
 end
 
 imagesc(collapsed_view(1:NET_SIZE*NET_SIZE, 1:NET_SIZE*NET_SIZE)); hold on; colorbar; axis xy;
-colormap; box off; title('Synaptic connection weights for cross-modal interaction'); 
+colormap; box off; title('Cross-modal synaptic weights'); 
 
 %--------------------------------------------------------------------------------------------------------------------------
  % second SOM
@@ -801,7 +801,7 @@ for idx = 1:NET_SIZE
         end
     end
 end
-box off; title('Synaptic connection weights for sensory projections'); axis xy; axis equal;
+box off; title('Sensory projections synaptic weights'); axis xy; axis equal;
 
 % synaptic connections strenghts from cross modal Hebbian interaction (H weight matrix)
 subplot(ROWS, COLS, [28,35]);
@@ -846,4 +846,8 @@ for temp_idx = 1:NET_SIZE*NET_SIZE*NET_SIZE*NET_SIZE
 end
 
 imagesc(collapsed_view(1:NET_SIZE*NET_SIZE, 1:NET_SIZE*NET_SIZE)); hold on; colorbar; axis xy;
-colormap; box off; title('Synaptic connection weights for cross-modal interaction'); 
+colormap; box off; title('Cross-modal synaptic weights'); 
+
+%% TODO INCREASE CROSS-MODAL INTERACTIONS PARAMS IN TIME SIGMA & ALPHA decrese while the others increase
+% save the workspace in a file
+save 5000_epochs.mat;
