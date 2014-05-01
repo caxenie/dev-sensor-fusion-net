@@ -25,11 +25,14 @@ qedir1 = zeros(simopts.net.size, simopts.net.size);
 qeind1 = zeros(simopts.net.size, simopts.net.size);
 qedir2 = zeros(simopts.net.size, simopts.net.size);
 qeind2 = zeros(simopts.net.size, simopts.net.size);
-sum_norm_W1 = zeros(1, simopts.data.trainvsize); sum_norm_W2 = zeros(1, simopts.data.trainvsize);
+sum_norm_W1 = 0; sum_norm_W2 = 0;
 cross_mod1 = 0; cross_mod2 = 0;
 % init learning rate and neighborhood radius
 alphat = zeros(1, simopts.net.maxepochs);
 sigmat = zeros(1, simopts.net.maxepochs);
+gammat = zeros(1, simopts.net.maxepochs);
+xit = zeros(1, simopts.net.maxepochs);
+kappat = zeros(1, simopts.net.maxepochs);
 tau = 1000;
 % main loop of the network
 while(1)
@@ -97,6 +100,11 @@ while(1)
                 for jdx = 1:simopts.net.size
                    %-------------------------------------------------------------------------------
                     % use the same leraning parameters for both SOM
+                    
+                    % the learning rate and radius decrease over time to
+                    % enable learning on a coarse and then on a finet time
+                    % scale
+                    
                     % compute the learning rate @ current epoch
                     
                     % exponential learning rate adaptation
@@ -108,6 +116,15 @@ while(1)
 %                     
                     % compute the neighborhood radius size @ current epoch
                     sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
+                                      
+                    % adapt the cross-modal interaction params (increase in time)
+                    
+                    % cross-modal activation impact on local som learning
+                    gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
+                    % inhibitory component to ensure only co-activation
+                    xit(net_iter) = xit(net_iter)*exp(net_iter/tau);
+                    % Hebbian learning rate
+                    kappat(net_iter) = kappat(net_iter)*exp(net_iter/tau);
                     %-------------------------------------------------------------------------------
                     % fist SOM activations
                     % compute the direct activation - neighborhood kernel
@@ -134,26 +151,24 @@ while(1)
                         simopts.net.gamma*exp(-(norm([bmuind1.xpos - idx,  bmuind1.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
                     
                     % update weights for the current neuron in the BMU
+                    % neighborhood - move the neurons close to the input
+                    % pattern according to the total activation pattern
                     
                     % normalize weights from input space
                     % compute the sum squared weight update for normalization
                     for w_idx = 1:simopts.data.trainvsize
-                        for norm_idx = 1:simopts.net.size
-                            for norm_jdx = 1:simopts.net.size
-                                sum_norm_W1(w_idx) = sum_norm_W1(w_idx) + (som1(norm_idx, norm_jdx).W(w_idx) + alphat(net_iter)*som1(norm_idx, norm_jdx).at*qedir1(norm_idx, norm_jdx)-...
-                                    simopts.net.xi*(som1(norm_idx, norm_jdx).ad - som1(norm_idx, norm_jdx).at)*qedir1(norm_idx, norm_jdx))^2;
-                            end
-                        end
+                                sum_norm_W1 = sum_norm_W1 + (som1(idx, jdx).W(w_idx) + alphat(net_iter)*som1(idx, jdx).at*qedir1(idx, jdx)-...
+                            xit(net_iter)*(som1(idx, jdx).ad - som1(idx, jdx).at)*qedir1(idx, jdx))^2;
                     end
                     
                     % input weights update combining an excitatory and
                     % inhibitory component such that a unit is brought
-                    % closer to the input if is activated by BOTH input and
-                    % cross modal input
+                    % closer to the input if is activated by BOTH senory input and
+                    % cross modal projections (co-activation pattern)
                     for w_idx = 1:simopts.data.trainvsize
                         som1(idx, jdx).W(w_idx) = (som1(idx, jdx).W(w_idx) + alphat(net_iter)*som1(idx, jdx).at*qedir1(idx, jdx)-...
-                            simopts.net.xi*(som1(idx, jdx).ad - som1(idx, jdx).at)*(netin.trainv1(trainv_idx, w_idx) - som1(idx, jdx).W(w_idx)))/...
-                            sqrt(sum_norm_W1(w_idx));
+                            xit(net_iter)*(som1(idx, jdx).ad - som1(idx, jdx).at)*qedir1(idx, jdx))/...
+                            sqrt(sum_norm_W1);
                     end
                     
                     % cross-modal Hebbian links update for co-activated
@@ -163,7 +178,7 @@ while(1)
                             
                             % compute new weight using Hebbian learning
                             % rule deltaH = K*preH*postH
-                            som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2)+ simopts.net.kappa*som1(idx, jdx).at*som2(idx, jdx).at;
+                            som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*som1(idx, jdx).at*som2(isom2, jsom2).at;
                         end
                     end
                     
@@ -190,20 +205,16 @@ while(1)
                     % compute the joint activation from both input space
                     % and cross-modal Hebbian linkage
                     
-                    som2(idx, jdx).at = (1 - simopts.net.gamma)*exp(-(norm([idx - bmudir2.xpos, jdx - bmudir2.ypos]))^2/(2*(sigmat(net_iter)^2))) + ...
-                        simopts.net.gamma*exp(-(norm([idx - bmuind2.xpos, jdx - bmuind2.ypos]))^2/(2*(sigmat(net_iter)^2)));
+                    som2(idx, jdx).at = (1 - simopts.net.gamma)*exp(-(norm([bmudir2.xpos - idx,bmudir2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2))) + ...
+                        simopts.net.gamma*exp(-(norm([bmuind2.xpos - idx, bmuind2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
                     
                     % update weights for the current neuron in the BMU
                     
                     % normalize weights from input space
                     % compute the sum squared weight update for normalization
                     for w_idx = 1:simopts.data.trainvsize
-                        for norm_idx = 1:simopts.net.size
-                            for norm_jdx = 1:simopts.net.size
-                                sum_norm_W2(w_idx) = sum_norm_W2(w_idx) + (som2(norm_idx, norm_jdx).W(w_idx) + alphat(net_iter)*som2(norm_idx, norm_jdx).at*qedir2(norm_idx, norm_jdx)-...
-                                    simopts.net.xi*(som2(norm_idx, norm_jdx).ad - som2(norm_idx, norm_jdx).at)*qedir2(norm_idx, norm_jdx))^2;
-                            end
-                        end
+                                sum_norm_W2 = sum_norm_W2 + (som2(idx, jdx).W(w_idx) + alphat(net_iter)*som2(idx, jdx).at*qedir2(idx, jdx)-...
+                                    xit(net_iter)*(som2(idx, jdx).ad - som2(idx, jdx).at)*qedir2(idx, jdx))^2;
                     end
                     
                     % input weights update combining an excitatory and
@@ -212,8 +223,8 @@ while(1)
                     % cross modal input
                     for w_idx = 1:simopts.data.trainvsize
                         som2(idx, jdx).W(w_idx) = (som2(idx, jdx).W(w_idx) + alphat(net_iter)*som2(idx, jdx).at*qedir2(idx, jdx)-...
-                            simopts.net.xi*(som2(idx, jdx).ad - som2(idx, jdx).at)*(netin.trainv2(trainv_idx, w_idx) - som2(idx, jdx).W(w_idx)))/...
-                            sqrt(sum_norm_W2(w_idx));
+                            xit(net_iter)*(som2(idx, jdx).ad - som2(idx, jdx).at)*qedir2(idx, jdx))/...
+                            sqrt(sum_norm_W2);
                         
                     end
                     
@@ -223,7 +234,7 @@ while(1)
                         for jsom1 = 1:simopts.net.size
                             
                             % update weight using Hebbian learning rule
-                            som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + simopts.net.kappa*som2(idx, jdx).at*som1(idx, jdx).at;
+                            som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*som2(idx, jdx).at*som1(isom1, jsom1).at;
                         end
                     end
                     
