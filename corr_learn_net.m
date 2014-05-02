@@ -16,12 +16,12 @@ simopts.data.scaling = -0.0572957795130823; % data dependent scaling
 simopts.data.freqsamp = 25; % Hz
 simopts.data.trainvtype = 'interval'; % train vector type, i.e. fixed interval / sliding window
 simopts.data.trainvsize = 100; % size (in samples) of the input vector
-simopts.data.corrtype = 'nonlinear'; % input data correlation type, i.e. algebraic, temporal, nonlinear
+simopts.data.corrtype = 'algebraic'; % input data correlation type, i.e. algebraic, temporal, nonlinear
 % parametrize the network
 simopts.net.size = 10; % 10 x 10 square lattice SOM nets
 simopts.net.alpha = 0.1; % initial learning rate (adaptive process)
 simopts.net.sigma = simopts.net.size/2+1; % initial neighborhood size (adaptive process)
-simopts.net.maxepochs = 10; % number of epochs to train
+simopts.net.maxepochs = 30; % number of epochs to train
 simopts.net.gamma = 0.35; % cross-modal activation impact on local som learning
 simopts.net.xi = 0.27; % inhibitory component in sensory projections weight update
 simopts.net.kappa = 0.23; % learning rate (gain factor) in Hebbian weight update
