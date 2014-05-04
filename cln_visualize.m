@@ -31,7 +31,7 @@ title('Xcorr analysis'); xlabel('Samples');
 vishdl(3) = figure;
 switch visin.simopts.data.trainvtype
     case 'interval'
-        START_IDX = 24; SAMPLE_DATA_CHUNKS = 10;
+        START_IDX = 13; SAMPLE_DATA_CHUNKS = 10;
         for idx = 1:SAMPLE_DATA_CHUNKS
             subplot(1,SAMPLE_DATA_CHUNKS,idx); set(gcf, 'color', 'white'); box off; grid off;
             plot(visin.netin.trainv1(START_IDX+idx, :), 'r'); hold on;

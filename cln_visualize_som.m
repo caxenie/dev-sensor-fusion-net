@@ -22,8 +22,11 @@ COLS = 6; ROWS = 6;
 % plot the learning learning adaptation
 subplot(ROWS, COLS, [5,12]); plot(visin.alphat, '.b');
 % plot the neighborhood kernel radius adaptation
-hold on; plot(visin.sigmat, '.r'); title('Adaptation parameters'); xlabel('Epochs');
-legend('Learning rate','Neighborhood kernel radius'); box off;
+hold on; plot(visin.sigmat, '.r'); 
+hold on; plot(visin.gammat, '.g');
+hold on; plot(visin.xit, '.m');
+hold on; plot(visin.kappat, '.k');title('Adaptation parameters'); xlabel('Epochs');
+legend('Learning rate','Neighborhood kernel radius','Total activation gain param','Inhibitory gain in W update','Hebbian learning rate in cross-modal interaction'); box off;
 % total activity in each neurons in the SOM
 subplot(ROWS, COLS, [3,10]);
 at_vis = zeros(visin.simopts.net.size, visin.simopts.net.size);

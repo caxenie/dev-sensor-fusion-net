@@ -10,12 +10,12 @@ clear all; close all; clc
 %% LOAD DATA AND SETUP RUNTIME
 
 % simulation options parametrization
-simopts.mode = 'run'; % mode given the function of the script, i.e. run, analyze
+simopts.mode = 'analyze'; % mode given the function of the script, i.e. run, analyze
 simopts.data.infile = 'robot_data_jras_paper';
 simopts.data.scaling = -0.0572957795130823; % data dependent scaling
 simopts.data.freqsamp = 25; % Hz
 simopts.data.trainvtype = 'interval'; % train vector type, i.e. fixed interval / sliding window
-simopts.data.trainvsize = 100; % size (in samples) of the input vector
+simopts.data.trainvsize = 200; % size (in samples) of the input vector
 simopts.data.corrtype = 'algebraic'; % input data correlation type, i.e. algebraic, temporal, nonlinear
 % parametrize the network
 simopts.net.size = 10; % 10 x 10 square lattice SOM nets
@@ -39,7 +39,7 @@ switch(simopts.mode)
         runtime_data = cln_iterate_network(simopts, netin, som1, som2);
     case 'analyze'
         % parametrize the simulation according the data
-        simopts.data.infile = '10_epochs_algebraic';
+        simopts.data.infile = sprintf('%d_epochs_%s', simopts.net.maxepochs, simopts.data.corrtype);
         % prepare input data for visualization
         visin = cln_runtime_dataset_setup(simopts);
         % VISUALIZE THE NETWORK DYNAMICS
