@@ -100,7 +100,7 @@ while(1)
             for idx = 1:simopts.net.size
                 for jdx = 1:simopts.net.size
                    %-------------------------------------------------------------------------------
-                    % use the same leraning parameters for both SOM
+                    % use the same learning parameters for both SOM
                     
                     % the learning rate and radius decrease over time to
                     % enable learning on a coarse and then on a finet time
@@ -114,7 +114,7 @@ while(1)
                     % semi-empirical learning rate adaptation
 %                     A = simopts.net.maxepochs/100.0; B = A;
 %                     alphat(net_iter) = A/(net_iter + B);
-%                     
+                   
                     % compute the neighborhood radius size @ current epoch
                     sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
                                       
@@ -122,15 +122,17 @@ while(1)
                     
                     % cross-modal activation impact on local som learning
                     gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
+                    
                     % inhibitory component to ensure only co-activation
-                    xit(net_iter) = xit(net_iter)*exp(net_iter/tau);
+                    xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
+                    
                     % Hebbian learning rate
-                    kappat(net_iter) = kappat(net_iter)*exp(net_iter/tau);
+                    kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
                     %-------------------------------------------------------------------------------
                     % fist SOM activations
                     % compute the direct activation - neighborhood kernel
                     som1(idx, jdx).ad = alphat(net_iter)*...
-                        exp(-(norm([bmudir1.xpos - idx, bmudir1.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)))*(1 - qedir1(idx, jdx));
+                        exp(-(norm([bmudir1.xpos - idx, bmudir1.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)))*(qedir1(idx, jdx));
                     
                     % compute the indirect activation (from all other units in SOM2)
                     % first compute the total activation from the other SOM
@@ -197,7 +199,7 @@ while(1)
                     
                     % compute the direct activation - neighborhood kernel
                     som2(idx, jdx).ad = alphat(net_iter)*...
-                        exp(-(norm([bmudir2.xpos - idx, bmudir2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)))*(1-qedir2(idx, jdx));
+                        exp(-(norm([bmudir2.xpos - idx, bmudir2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)))*(qedir2(idx, jdx));
                     
                     % compute the indirect activation (from all other units in SOM2)
                     % first compute the total activation from the other SOM
@@ -215,7 +217,7 @@ while(1)
                     % compute the joint activation from both input space
                     % and cross-modal Hebbian linkage
                     
-                    som2(idx, jdx).at = (1 - gammat(net_iter))*exp(-(norm([bmudir2.xpos - idx,bmudir2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2))) + ...
+                    som2(idx, jdx).at = 1000*(1 - gammat(net_iter))*exp(-(norm([bmudir2.xpos - idx,bmudir2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2))) + ...
                         gammat(net_iter)*exp(-(norm([bmuind2.xpos - idx, bmuind2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
                     
                     % update weights for the current neuron in the BMU

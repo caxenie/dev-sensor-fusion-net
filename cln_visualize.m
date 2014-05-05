@@ -38,7 +38,7 @@ switch visin.simopts.data.trainvtype
             plot(visin.netin.trainv2(START_IDX+idx, :), 'b');
         end
     case 'sliding'
-        START_IDX = 300; SAMPLE_DATA_CHUNKS = 10;
+        START_IDX = 300; SAMPLE_DATA_CHUNKS = 10; TAU_SLIDE = 10; % CAREFUL ! TAU_SLIDE < IN_SIZE
         for idx = 1:SAMPLE_DATA_CHUNKS
             subplot(1,SAMPLE_DATA_CHUNKS,idx); set(gcf, 'color', 'white'); box off; grid off;
             plot(visin.netin.trainv1(START_IDX+idx*TAU_SLIDE, :), 'r'); hold on;

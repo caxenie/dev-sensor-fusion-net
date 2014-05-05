@@ -24,8 +24,9 @@ subplot(ROWS, COLS, [5,12]); plot(visin.alphat, '.b');
 % plot the neighborhood kernel radius adaptation
 hold on; plot(visin.sigmat, '.r'); 
 hold on; plot(visin.gammat, '.g');
-hold on; plot(visin.xit, '.m');
-hold on; plot(visin.kappat, '.k');title('Adaptation parameters'); xlabel('Epochs');
+hold on; plot(visin.xit, '*m');
+hold on; plot(visin.kappat, '*k');
+title('Adaptation parameters'); xlabel('Epochs');
 legend('Learning rate','Neighborhood kernel radius','Total activation gain param','Inhibitory gain in W update','Hebbian learning rate in cross-modal interaction'); box off;
 % total activity in each neurons in the SOM
 subplot(ROWS, COLS, [3,10]);
@@ -46,7 +47,7 @@ for idx = 1:visin.simopts.net.size
     end
 end
 imagesc((ad_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); set(gcf, 'color', 'white'); colorbar; axis xy;
-colormap; box off; title('Sensory elicited activity');
+colormap; box off; title('Sensory elicited act.');
 % indirect activity elicited by cross-modal Hebbian linkage (plastic connections)
 subplot(ROWS, COLS, [17, 24]);
 ai_vis = zeros(visin.simopts.net.size, visin.simopts.net.size);
@@ -56,7 +57,7 @@ for idx = 1:visin.simopts.net.size
     end
 end
 imagesc((ai_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); set(gcf, 'color', 'white');colorbar; axis xy;
-colormap; box off; title('Cross-modal elicited activity');
+colormap; box off; title('Cross-modal elicited act.');
 % synaptic connections strenghts from sensory projections (W weight matrix)
 subplot(ROWS, COLS, [26, 33]);
 W_vis_elem = zeros(visin.simopts.net.size, visin.simopts.net.size, visin.simopts.net.size, visin.simopts.net.size);

@@ -18,24 +18,24 @@ simopts.data.trainvtype = 'interval'; % train vector type, i.e. fixed interval /
 simopts.data.trainvsize = 200; % size (in samples) of the input vector
 simopts.data.corrtype = 'algebraic'; % input data correlation type, i.e. algebraic, temporal, nonlinear
 % parametrize the network
-simopts.net.size = 10; % 10 x 10 square lattice SOM nets
+simopts.net.size = 10; % size x size square lattice SOM nets
 simopts.net.alpha = 0.1; % initial learning rate (adaptive process)
 simopts.net.sigma = simopts.net.size/2+1; % initial neighborhood size (adaptive process)
-simopts.net.maxepochs = 30; % number of epochs to train
-simopts.net.gamma = 0.35; % cross-modal activation impact on local som learning
-simopts.net.xi = 0.27; % inhibitory component in sensory projections weight update
-simopts.net.kappa = 0.23; % learning rate (gain factor) in Hebbian weight update
+simopts.net.maxepochs = 5; % number of epochs to train
+simopts.net.gamma = 0.75; % cross-modal activation impact on local som learning
+simopts.net.xi = 0.6; % inhibitory component in sensory projections weight update
+simopts.net.kappa = 0.53; % learning rate (gain factor) in Hebbian weight update
 simopts.net.lambda = simopts.net.maxepochs/log(simopts.net.sigma); % temporal coef
-% prepare input data for the network
-netin = cln_sensory_dataset_setup(simopts);
-% create the SOM networks
-som1 = cln_create_som(simopts, netin.raw1);
-som2 = cln_create_som(simopts, netin.raw2);
 
 %% RUN THE CORRELATION LEARNING NETWORK (MODES: RUN / ANALYZE)
 % check mode
 switch(simopts.mode)
     case 'run'
+        % prepare input data for the network
+        netin = cln_sensory_dataset_setup(simopts);
+        % create the SOM networks
+        som1 = cln_create_som(simopts, netin.raw1);
+        som2 = cln_create_som(simopts, netin.raw2);
         runtime_data = cln_iterate_network(simopts, netin, som1, som2);
     case 'analyze'
         % parametrize the simulation according the data

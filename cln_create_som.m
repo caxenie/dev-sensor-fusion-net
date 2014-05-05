@@ -43,9 +43,9 @@ for idx = 1:opt.net.size
                 net(idx, jdx).H(kidx, tidx)  = minin + (maxin - minin)*rand;
             end
         end
-        net(idx, jdx).ad = minin + (maxin - minin)*rand;
-        net(idx, jdx).ai = minin + (maxin - minin)*rand;
-        net(idx, jdx).at = minin + (maxin - minin)*rand;
+%         net(idx, jdx).ad = minin + (maxin - minin)*rand;
+%         net(idx, jdx).ai = minin + (maxin - minin)*rand;
+%         net(idx, jdx).at = minin + (maxin - minin)*rand;
     end
 end
 
