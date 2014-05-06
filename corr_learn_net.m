@@ -15,16 +15,16 @@ simopts.data.infile = 'robot_data_jras_paper';
 simopts.data.scaling = -0.0572957795130823; % data dependent scaling
 simopts.data.freqsamp = 25; % Hz
 simopts.data.trainvtype = 'interval'; % train vector type, i.e. fixed interval / sliding window
-simopts.data.trainvsize = 200; % size (in samples) of the input vector
+simopts.data.trainvsize = 50; % size (in samples) of the input vector
 simopts.data.corrtype = 'algebraic'; % input data correlation type, i.e. algebraic, temporal, nonlinear
 % parametrize the network
 simopts.net.size = 10; % size x size square lattice SOM nets
 simopts.net.alpha = 0.1; % initial learning rate (adaptive process)
 simopts.net.sigma = simopts.net.size/2+1; % initial neighborhood size (adaptive process)
 simopts.net.maxepochs = 5; % number of epochs to train
-simopts.net.gamma = 0.75; % cross-modal activation impact on local som learning
-simopts.net.xi = 0.6; % inhibitory component in sensory projections weight update
-simopts.net.kappa = 0.53; % learning rate (gain factor) in Hebbian weight update
+simopts.net.gamma = 0.1; % cross-modal activation impact on local som learning
+simopts.net.xi = 0.001; % inhibitory component in sensory projections weight update
+simopts.net.kappa = 0.1; % learning rate (gain factor) in Hebbian weight update
 simopts.net.lambda = simopts.net.maxepochs/log(simopts.net.sigma); % temporal coef
 
 %% RUN THE CORRELATION LEARNING NETWORK (MODES: RUN / ANALYZE)
@@ -36,13 +36,14 @@ switch(simopts.mode)
         % create the SOM networks
         som1 = cln_create_som(simopts, netin.raw1);
         som2 = cln_create_som(simopts, netin.raw2);
+        % run the network
         runtime_data = cln_iterate_network(simopts, netin, som1, som2);
     case 'analyze'
-        % parametrize the simulation according the data
+        % parametrize the simulation according the data file
         simopts.data.infile = sprintf('%d_epochs_%s', simopts.net.maxepochs, simopts.data.corrtype);
         % prepare input data for visualization
         visin = cln_runtime_dataset_setup(simopts);
-        % VISUALIZE THE NETWORK DYNAMICS
+        % visualize network dynamics
         vishdl = cln_visualize(visin);
 end
 % end simulation
