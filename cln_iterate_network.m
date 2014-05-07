@@ -88,6 +88,8 @@ while(1)
                     
                     % exponential learning rate adaptation
                     % alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
+                    
+                    % linear learing rate adaptation
                     alphat(net_iter) = alphat(net_iter-1) * 0.99;
                     
                     % semi-empirical learning rate adaptation
@@ -96,12 +98,16 @@ while(1)
                    
                     % compute the neighborhood radius size @ current epoch
                     % sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
+                    
+                    % power-law neighborhood radius size adaptation
                     sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);                  
                     
                     % adapt the cross-modal interaction params (increase in time)
                     
                     % cross-modal activation impact on local som learning
                     % gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
+                    
+                    % linear cross-modal impact factor on learning
                     gammat(net_iter) = gammat(net_iter-1)*1.01;
                     if(gammat(net_iter)>1) 
                         gammat(net_iter) = 1; 
@@ -109,6 +115,9 @@ while(1)
                     
                     % inhibitory component to ensure only co-activation
                     % xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
+                    
+                    % linear inhibitory component weight for co-activation
+                    % in map weights update
                     xit(net_iter) = xit(net_iter - 1)*1.015;
                     if(xit(net_iter)>0.07)
                         xit(net_iter) = 0.07;
@@ -116,6 +125,8 @@ while(1)
                                                         
                     % Hebbian learning rate
                     % kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
+                    
+                    % linear Hebbian learning rate update
                     kappat(net_iter) = kappat(net_iter)*1.01;
                     if(kappat(net_iter)>0.3)
                         kappat(net_iter) = 0.3;
@@ -247,7 +258,7 @@ while(1)
     end
 end
     % save everything to a file and return the name
-    file_dump = sprintf('%d_epochs_%s', simopts.net.maxepochs, simopts.data.corrtype);
+    file_dump = sprintf('%d_epochs_%d_neurons_%s', simopts.net.maxepochs, simopts.net.size,simopts.data.corrtype);
     save(file_dump);
     rundata = load(file_dump);
 end

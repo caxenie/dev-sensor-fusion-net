@@ -18,10 +18,10 @@ simopts.data.trainvtype = 'interval'; % train vector type, i.e. fixed interval /
 simopts.data.trainvsize = 50; % size (in samples) of the input vector
 simopts.data.corrtype = 'algebraic'; % input data correlation type, i.e. algebraic, temporal, nonlinear
 % parametrize the network
-simopts.net.size = 10; % size x size square lattice SOM nets
+simopts.net.size = 5; % size x size square lattice SOM nets
 simopts.net.alpha = 0.1; % initial learning rate (adaptive process)
 simopts.net.sigma = simopts.net.size/2+1; % initial neighborhood size (adaptive process)
-simopts.net.maxepochs = 5; % number of epochs to train
+simopts.net.maxepochs = 1000; % number of epochs to train
 simopts.net.gamma = 0.1; % cross-modal activation impact on local som learning
 simopts.net.xi = 0.001; % inhibitory component in sensory projections weight update
 simopts.net.kappa = 0.1; % learning rate (gain factor) in Hebbian weight update
@@ -40,7 +40,7 @@ switch(simopts.mode)
         runtime_data = cln_iterate_network(simopts, netin, som1, som2);
     case 'analyze'
         % parametrize the simulation according the data file
-        simopts.data.infile = sprintf('%d_epochs_%s', simopts.net.maxepochs, simopts.data.corrtype);
+        simopts.data.infile = sprintf('%d_epochs_%d_neurons_%s', simopts.net.maxepochs, simopts.net.size, simopts.data.corrtype);
         % prepare input data for visualization
         visin = cln_runtime_dataset_setup(simopts);
         % visualize network dynamics
