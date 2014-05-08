@@ -31,18 +31,18 @@ title('Xcorr analysis'); xlabel('Samples');
 vishdl(3) = figure;
 switch visin.simopts.data.trainvtype
     case 'interval'
-        START_IDX = 13; SAMPLE_DATA_CHUNKS = 10;
-        for idx = 1:SAMPLE_DATA_CHUNKS
-            subplot(1,SAMPLE_DATA_CHUNKS,idx); set(gcf, 'color', 'white'); box off; grid off;
-            plot(visin.netin.trainv1(START_IDX+idx, :), 'r'); hold on;
-            plot(visin.netin.trainv2(START_IDX+idx, :), 'b');
+        start_show_idx = 10; samples_show_num = 10;
+        for idx = 1:samples_show_num
+            subplot(1,samples_show_num,idx); set(gcf, 'color', 'white'); box off; grid off;
+            plot(visin.netin.trainv1(start_show_idx+idx, :), 'r'); hold on;
+            plot(visin.netin.trainv2(start_show_idx+idx, :), 'b');
         end
     case 'sliding'
-        START_IDX = 300; SAMPLE_DATA_CHUNKS = 10; TAU_SLIDE = 10; % CAREFUL ! TAU_SLIDE < IN_SIZE
-        for idx = 1:SAMPLE_DATA_CHUNKS
-            subplot(1,SAMPLE_DATA_CHUNKS,idx); set(gcf, 'color', 'white'); box off; grid off;
-            plot(visin.netin.trainv1(START_IDX+idx*TAU_SLIDE, :), 'r'); hold on;
-            plot(visin.netin.trainv2(START_IDX+idx*TAU_SLIDE, :), 'b');
+        start_show_idx = 10; samples_show_num = 10; window_slide_time = 10; % CAREFUL ! window_slide_time < IN_SIZE
+        for idx = 1:samples_show_num
+            subplot(1,samples_show_num,idx); set(gcf, 'color', 'white'); box off; grid off;
+            plot(visin.netin.trainv1(start_show_idx+idx*window_slide_time, :), 'r'); hold on;
+            plot(visin.netin.trainv2(start_show_idx+idx*window_slide_time, :), 'b');
         end
 end
 title('Sample training vectors for input p1 vs p2');

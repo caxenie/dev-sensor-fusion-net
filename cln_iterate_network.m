@@ -90,11 +90,11 @@ while(1)
                     % alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
                     
                     % linear learing rate adaptation
-                    alphat(net_iter) = alphat(net_iter-1) * 0.99;
-                    
+                    % alphat(net_iter) = alphat(net_iter-1) * 0.99;
+                     
                     % semi-empirical learning rate adaptation
-                    % A = simopts.net.maxepochs/100.0; B = A;
-                    % alphat(net_iter) = A/(net_iter + B);  
+                    A = simopts.net.maxepochs/100.0; B = A;
+                    alphat(net_iter) = A/(net_iter + B);  
                    
                     % compute the neighborhood radius size @ current epoch
                     % sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
@@ -105,32 +105,32 @@ while(1)
                     % adapt the cross-modal interaction params (increase in time)
                     
                     % cross-modal activation impact on local som learning
-                    % gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
+                    gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
                     
                     % linear cross-modal impact factor on learning
-                    gammat(net_iter) = gammat(net_iter-1)*1.01;
-                    if(gammat(net_iter)>1) 
-                        gammat(net_iter) = 1; 
-                    end
+                    % gammat(net_iter) = gammat(net_iter-1)*1.01;
+                    %if(gammat(net_iter)>1) 
+                    %    gammat(net_iter) = 1; 
+                    %end
                     
                     % inhibitory component to ensure only co-activation
-                    % xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
+                    xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
                     
                     % linear inhibitory component weight for co-activation
                     % in map weights update
-                    xit(net_iter) = xit(net_iter - 1)*1.015;
-                    if(xit(net_iter)>0.07)
-                        xit(net_iter) = 0.07;
-                    end
+                    % xit(net_iter) = xit(net_iter - 1)*1.015;
+                    % if(xit(net_iter)>0.07)
+                    %    xit(net_iter) = 0.07;
+                    %end
                                                         
                     % Hebbian learning rate
-                    % kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
+                    kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
                     
                     % linear Hebbian learning rate update
-                    kappat(net_iter) = kappat(net_iter)*1.01;
-                    if(kappat(net_iter)>0.3)
-                        kappat(net_iter) = 0.3;
-                    end
+                    %kappat(net_iter) = kappat(net_iter)*1.01;
+                    %if(kappat(net_iter)>0.3)
+                    %    kappat(net_iter) = 0.3;
+                    %end
     
                     %-------------------------------------------------------------------------------
                     % fist SOM activations
@@ -172,6 +172,9 @@ while(1)
                     for w_idx = 1:simopts.data.trainvsize
                         som1(idx, jdx).W(w_idx) = som1(idx, jdx).W(w_idx) + alphat(net_iter)*som1(idx, jdx).at*qedir1(idx, jdx)-...
                             xit(net_iter)*(som1(idx, jdx).ad - som1(idx, jdx).at)*qedir1(idx, jdx);
+                    end
+                    
+                    for w_idx = 1:simopts.data.trainvsize
                         % normallize weights
                         som1(idx, jdx).W(w_idx) = (som1(idx, jdx).W(w_idx) - min((som1(idx, jdx).W(:))))/max((som1(idx, jdx).W(:)));
                     end
@@ -184,11 +187,16 @@ while(1)
                             % compute new weight using Hebbian rule
                             % rule deltaH = K*preH*postH
                             som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*som1(idx, jdx).at*som2(isom2, jsom2).at;
+                        end
+                    end
+
+                    for isom2 = 1:simopts.net.size
+                        for jsom2 = 1:simopts.net.size
                             % normalize weights
                             som1(idx, jdx).H(isom2, jsom2) = (som1(idx, jdx).H(isom2, jsom2) - min((som1(idx, jdx).H(:))))/max((som1(idx, jdx).H(:))) ;
                         end
                     end
-                                       
+                    
                     %-------------------------------------------------------------------------------
                     % compute second SOM activations
                     
@@ -229,10 +237,12 @@ while(1)
                     for w_idx = 1:simopts.data.trainvsize
                         som2(idx, jdx).W(w_idx) = som2(idx, jdx).W(w_idx) + alphat(net_iter)*som2(idx, jdx).at*qedir2(idx, jdx)-...
                             xit(net_iter)*(som2(idx, jdx).ad - som2(idx, jdx).at)*qedir2(idx, jdx);
+                    end
+                    
+                    for w_idx = 1:simopts.data.trainvsize
                         % normallize weights
                         som2(idx, jdx).W(w_idx) = (som2(idx, jdx).W(w_idx) - min((som2(idx, jdx).W(:))))/max((som2(idx, jdx).W(:)));
                     end
-                    
                     % cross-modal Hebbian links update for co-activated
                     % neurons in both SOMs
                                                             
@@ -241,6 +251,11 @@ while(1)
                             % compute new weight using Hebbian rule
                             % rule deltaH = K*preH*postH
                             som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*som2(idx, jdx).at*som1(isom1, jsom1).at;
+                        end
+                    end
+                    
+                    for isom1 = 1:simopts.net.size
+                        for jsom1 = 1:simopts.net.size
                             % normalize weights
                             som2(idx, jdx).H(isom1, jsom1) = (som2(idx, jdx).H(isom1, jsom1) - min((som2(idx, jdx).H(:))))/max((som2(idx, jdx).H(:))) ;
                         end
