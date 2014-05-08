@@ -10,8 +10,8 @@ clear all; close all; clc
 %% LOAD DATA AND SETUP RUNTIME
 
 % simulation options parametrization
-simopts.mode = 'analyze'; % mode given the function of the script, i.e. run, analyze
-simopts.data.source = 'generated'; % data source: generated or sensors (data from robot)
+simopts.mode = 'run'; % mode given the function of the script, i.e. run, analyze
+simopts.data.source = 'sensors'; % data source: generated or sensors (data from robot)
 simopts.data.infile = 'robot_data_jras_paper';
 simopts.data.scaling = -0.0572957795130823; % data dependent scaling
 simopts.data.freqsamp = 25; % Hz
@@ -19,12 +19,12 @@ simopts.data.trainvtype = 'interval'; % train vector type, i.e. fixed interval /
 simopts.data.trainvsize = 100; % size (in samples) of the input vector
 simopts.data.corrtype = 'algebraic'; % input data correlation type, i.e. algebraic, temporal, nonlinear
 % parametrize the network
-simopts.net.size = 5; % size x size square lattice SOM nets
+simopts.net.size = 2; % size x size square lattice SOM nets
 simopts.net.alpha = 0.1; % initial learning rate (adaptive process)
 simopts.net.sigma = simopts.net.size/2+1; % initial neighborhood size (adaptive process)
-simopts.net.maxepochs = 10; % number of epochs to train
+simopts.net.maxepochs = 2; % number of epochs to train
 simopts.net.gamma = 0.1; % cross-modal activation impact on local som learning
-simopts.net.xi = 0.001; % inhibitory component in sensory projections weight update
+simopts.net.xi = 0.01; % inhibitory component in sensory projections weight update
 simopts.net.kappa = 0.1; % learning rate (gain factor) in Hebbian weight update
 simopts.net.lambda = simopts.net.maxepochs/log(simopts.net.sigma); % temporal coef
 

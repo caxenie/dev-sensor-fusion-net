@@ -71,6 +71,17 @@ while(1)
                 end
             end % end of bmus search loop
         
+            
+            fprintf(1, 'SOM1 \n IN_VEC:\n'); netin.trainv1(trainv_idx, :)
+            fprintf(1, 'WIN_POS:(%d,%d) - WIN:%f\n',bmudir1.xpos, bmudir1.ypos, bmudir1.qe);
+            fprintf(1, 'QE_MAT:\n'); qedir1
+            
+            
+            fprintf(1, 'SOM2 \n IN_VEC:\n'); netin.trainv2(trainv_idx, :)
+            fprintf(1, 'WIN_POS:(%d,%d) - WIN:%f\n',bmudir2.xpos, bmudir2.ypos, bmudir2.qe);
+            fprintf(1, 'QE_MAT:\n'); qedir2
+            
+            pause(10);
             % compute the activations for each neuron in each som s
             for idx = 1:simopts.net.size
                 for jdx = 1:simopts.net.size
@@ -87,20 +98,20 @@ while(1)
                     % compute the learning rate @ current epoch
                     
                     % exponential learning rate adaptation
-                    % alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
+                    alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
                     
                     % linear learing rate adaptation
                     % alphat(net_iter) = alphat(net_iter-1) * 0.99;
                      
                     % semi-empirical learning rate adaptation
-                    A = simopts.net.maxepochs/100.0; B = A;
-                    alphat(net_iter) = A/(net_iter + B);  
+                    % A = simopts.net.maxepochs/100.0; B = A;
+                    % alphat(net_iter) = A/(net_iter + B);  
                    
                     % compute the neighborhood radius size @ current epoch
-                    % sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
+                    sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
                     
                     % power-law neighborhood radius size adaptation
-                    sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);                  
+                    % sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);                  
                     
                     % adapt the cross-modal interaction params (increase in time)
                     
@@ -262,9 +273,10 @@ while(1)
                     end
                     
                     %-------------------------------------------------------------------------------
-                    
+                    pause(5);
                 end
-            end           
+            end 
+            disp ---------TRAINING_VECTOR_ENTRY-----------;
         end % end for each entry in the training vector
         net_iter = net_iter + 1;
     else
