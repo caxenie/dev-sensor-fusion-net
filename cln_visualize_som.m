@@ -66,10 +66,10 @@ imagesc((ai_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); set(gcf, 
 colormap; box off; title('Cross-modal elicited act.');
 % synaptic connections strenghts from sensory projections (W weight matrix)
 subplot(ROWS, COLS, [25, 32]);
-W_vis_elem = zeros(visin.simopts.net.size, visin.simopts.net.size, visin.simopts.net.size, visin.simopts.net.size);
+W_vis_elem = zeros(visin.simopts.net.size, visin.simopts.net.size, visin.simopts.data.trainvsize);
 for idx = 1:visin.simopts.net.size
     for jdx = 1:visin.simopts.net.size
-        for elem_idx = 1:visin.simopts.net.size
+        for elem_idx = 1:visin.simopts.data.trainvsize
             W_vis_elem(idx, jdx, elem_idx) = som(idx, jdx).W(elem_idx);
             scatter3(idx, jdx, elem_idx, 30, W_vis_elem(idx, jdx, elem_idx), 'filled');
             hold on; colorbar; set(gcf, 'color', 'white');

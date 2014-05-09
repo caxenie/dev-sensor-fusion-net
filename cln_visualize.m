@@ -31,14 +31,14 @@ title('Xcorr analysis'); xlabel('Samples');
 vishdl(3) = figure;
 switch visin.simopts.data.trainvtype
     case 'interval'
-        start_show_idx = 10; samples_show_num = 10;
+        start_show_idx = 0; samples_show_num = 10;
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); set(gcf, 'color', 'white'); box off; grid off;
             plot(visin.netin.trainv1(start_show_idx+idx, :), 'r'); hold on;
             plot(visin.netin.trainv2(start_show_idx+idx, :), 'b');
         end
     case 'sliding'
-        start_show_idx = 10; samples_show_num = 10; window_slide_time = 10; % CAREFUL ! window_slide_time < IN_SIZE
+        start_show_idx = 0; samples_show_num = 10; window_slide_time = 10; % CAREFUL ! window_slide_time < IN_SIZE
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); set(gcf, 'color', 'white'); box off; grid off;
             plot(visin.netin.trainv1(start_show_idx+idx*window_slide_time, :), 'r'); hold on;
