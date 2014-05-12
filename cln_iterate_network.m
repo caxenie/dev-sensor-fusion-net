@@ -60,10 +60,10 @@ while(1)
         % compute the learning rate @ current epoch
         
         % exponential learning rate adaptation
-        % alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
+        alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
         
         % linear learing rate adaptation
-        alphat(net_iter) = alphat(net_iter-1) * 0.99;
+        % alphat(net_iter) = alphat(net_iter-1) * 0.99;
         
         % semi-empirical learning rate adaptation - inverse
         % time adaptation
@@ -71,40 +71,40 @@ while(1)
         % alphat(net_iter) = A/(net_iter + B);
         
         % compute the neighborhood radius size @ current epoch
-        % sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
+        sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
         
         % power-law neighborhood radius size adaptation
-        sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
+        % sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
         
         % adapt the cross-modal interaction params (increase in time)
         
         % cross-modal activation impact on local som learning
-        % gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
+        gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
         
         % linear cross-modal impact factor on learning
-        gammat(net_iter) = gammat(net_iter-1)*1.01;
-        if(gammat(net_iter)>1)
-            gammat(net_iter) = 1;
-        end
+        % gammat(net_iter) = gammat(net_iter-1)*1.01;
+        % if(gammat(net_iter)>1)
+        %     gammat(net_iter) = 1;
+        % end
         
         % inhibitory component to ensure only co-activation
         xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
         
         % linear inhibitory component weight for co-activation
         % in map weights update
-        xit(net_iter) = xit(net_iter - 1)*1.015;
-        if(xit(net_iter)>0.07)
-            xit(net_iter) = 0.07;
-        end
+        % xit(net_iter) = xit(net_iter - 1)*1.015;
+        % if(xit(net_iter)>0.07)
+        %     xit(net_iter) = 0.07;
+        % end
         
         % Hebbian learning rate
-        % kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
+        kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
         
         % linear Hebbian learning rate update
-        kappat(net_iter) = kappat(net_iter)*1.01;
-        if(kappat(net_iter)>0.3)
-            kappat(net_iter) = 0.3;
-        end
+        % kappat(net_iter) = kappat(net_iter)*1.01;
+        % if(kappat(net_iter)>0.3)
+        %     kappat(net_iter) = 0.3;
+        % end
         
         %----------------------------------------------------------------------------------------------------------
         

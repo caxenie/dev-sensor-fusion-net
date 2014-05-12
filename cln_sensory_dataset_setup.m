@@ -50,6 +50,13 @@ switch(opts.data.corrtype)
 end
 % prepate the training vectors (fixed interval / sliding window)
 switch(opts.data.trainvtype)
+    case 'full'
+        training_set_size = 1;
+        training_set_p1 = zeros(training_set_size, opts.data.trainvsize);
+        training_set_p2 = zeros(training_set_size, opts.data.trainvsize);
+        
+        training_set_p1(1, :) = p1(1:opts.data.trainvsize);
+        training_set_p2(1, :) = p2(1:opts.data.trainvsize);
     case 'interval'
         % split the input vectors in training vectors
         training_set_size = round(length(p1)/opts.data.trainvsize-1);

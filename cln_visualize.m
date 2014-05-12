@@ -40,6 +40,9 @@ legend('Learning rate','Neighborhood kernel radius','Total activation gain param
 % visualize a sample input vector
 vishdl(4) = figure;
 switch visin.simopts.data.trainvtype
+    case 'full'
+        plot(visin.netin.raw1, '.b'); hold on;
+        plot(visin.netin.raw2, '.g'); box off; grid off;
     case 'interval'
         start_show_idx = 20; samples_show_num = 10;
         for idx = 1:samples_show_num
