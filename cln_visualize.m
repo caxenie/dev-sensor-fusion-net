@@ -26,28 +26,38 @@ title('Input var P2'); xlabel('Samples');
 vishdl(2) = figure;
 set(gcf, 'color', 'white');
 plot(xcorr(visin.netin.raw1, visin.netin.raw2), '.r'); box off; grid off;
-title('Xcorr analysis'); xlabel('Samples');
-% visualize a sample input vector
+suptitle('Xcorr analysis'); xlabel('Samples');
 vishdl(3) = figure;
+set(gcf, 'color', 'white'); box off; grid off;
+plot(visin.alphat, '.b');
+% plot the neighborhood kernel radius adaptation
+hold on; plot(visin.sigmat, '.r'); 
+hold on; plot(visin.gammat, '.g');
+hold on; plot(visin.xit, '*m');
+hold on; plot(visin.kappat, '*k');
+suptitle('Adaptation parameters'); xlabel('Epochs');
+legend('Learning rate','Neighborhood kernel radius','Total activation gain param','Inhibitory gain in W update','Hebbian learning rate in cross-modal interaction'); box off;
+% visualize a sample input vector
+vishdl(4) = figure;
 switch visin.simopts.data.trainvtype
     case 'interval'
-        start_show_idx = 0; samples_show_num = 10;
+        start_show_idx = 20; samples_show_num = 10;
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); set(gcf, 'color', 'white'); box off; grid off;
             plot(visin.netin.trainv1(start_show_idx+idx, :), 'r'); hold on;
             plot(visin.netin.trainv2(start_show_idx+idx, :), 'b');
         end
     case 'sliding'
-        start_show_idx = 0; samples_show_num = 10; window_slide_time = 10; % CAREFUL ! window_slide_time < IN_SIZE
+        start_show_idx = 20; samples_show_num = 10; window_slide_time = 10; % CAREFUL ! window_slide_time < IN_SIZE
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); set(gcf, 'color', 'white'); box off; grid off;
             plot(visin.netin.trainv1(start_show_idx+idx*window_slide_time, :), 'r'); hold on;
             plot(visin.netin.trainv2(start_show_idx+idx*window_slide_time, :), 'b');
         end
 end
-title('Sample training vectors for input p1 vs p2');
+suptitle('Sample training vectors for input p1 vs p2');
 
 % visualize the adaptive params, net activity and net weights
-vishdl(4) = cln_visualize_som(visin, visin.som1); % first som
-vishdl(5) = cln_visualize_som(visin, visin.som2); % second som
+vishdl(5) = cln_visualize_som(visin, visin.som1); % first som
+vishdl(6) = cln_visualize_som(visin, visin.som2); % second som
 end

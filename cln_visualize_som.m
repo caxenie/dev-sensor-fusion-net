@@ -8,145 +8,84 @@
 % FUNCTION
 % Visualize SOM specific data (adaptive params, activations, weights).
 %
-% ARGS
+% A
 %   som - network to visualize
 %
 % RETURN
 %   vishdl - figures handles for later access
 
 function somfig = cln_visualize_som(visin, som)
-somfig = figure;
-set(gcf, 'color', 'white'); box off; grid off;
-% display template
-COLS = 6; ROWS = 6;
-% plot the learning learning adaptation
-subplot(ROWS, COLS, [5,12]); plot(visin.alphat, '.b');
-% plot the neighborhood kernel radius adaptation
-hold on; plot(visin.sigmat, '.r'); 
-hold on; plot(visin.gammat, '.g');
-hold on; plot(visin.xit, '*m');
-hold on; plot(visin.kappat, '*k');
-title('Adaptation parameters'); xlabel('Epochs');
-legend('Learning rate','Neighborhood kernel radius','Total activation gain param','Inhibitory gain in W update','Hebbian learning rate in cross-modal interaction'); box off;
+% get the id of the current som
+somid = [som.id]; curr_somid = somid(end);
 % total activity in each neurons in the SOM
-subplot(ROWS, COLS, [3,10]);
+figure;
+set(gcf, 'color', 'white'); box off; grid off;
 at_vis = zeros(visin.simopts.net.size, visin.simopts.net.size);
 for idx = 1:visin.simopts.net.size
     for jdx = 1:visin.simopts.net.size
         at_vis(idx, jdx) = som(idx, jdx).at;
     end
 end
-imagesc((at_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); colorbar; axis xy;
-colormap; box off; title('Total (joint) activity in the network');
+imagesc((at_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); colorbar; axis xy; colormap; box off;
+fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title);
 
-% total activity in each neurons in the SOM - alternative 3D surfed display
-subplot(ROWS, COLS, [1,8]);
-surf(1:visin.simopts.net.size, 1:visin.simopts.net.size, at_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size));
-axis xy; colorbar;box off; title('Total (joint) activity in the network');
-
-% direct activity elicited by sensory projections (plastic connections)
-subplot(ROWS, COLS, [13, 20]);
+figure;
+set(gcf, 'color', 'white'); box off; grid off;
 ad_vis = zeros(visin.simopts.net.size, visin.simopts.net.size);
 for idx = 1:visin.simopts.net.size
     for jdx = 1:visin.simopts.net.size
         ad_vis(idx, jdx) = som(idx, jdx).ad;
     end
 end
-imagesc((ad_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); set(gcf, 'color', 'white'); colorbar; axis xy;
-colormap; box off; title('Sensory elicited act.');
+imagesc((ad_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); colorbar; axis xy;
+colormap; box off;
+fig_title = sprintf('Sensory elicited act. in network %s', curr_somid); suptitle(fig_title);
+
 % indirect activity elicited by cross-modal Hebbian linkage (plastic connections)
-subplot(ROWS, COLS, [17, 24]);
+figure;
+set(gcf, 'color', 'white'); box off; grid off;
 ai_vis = zeros(visin.simopts.net.size, visin.simopts.net.size);
 for idx = 1:visin.simopts.net.size
     for jdx = 1:visin.simopts.net.size
         ai_vis(idx, jdx) = som(idx, jdx).ai;
     end
 end
-imagesc((ai_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); set(gcf, 'color', 'white');colorbar; axis xy;
-colormap; box off; title('Cross-modal elicited act.');
+imagesc((ai_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); colorbar; axis xy;
+colormap; box off;
+fig_title = sprintf('Cross-modal elicited act. in network %s', curr_somid);suptitle(fig_title);
+
 % synaptic connections strenghts from sensory projections (W weight matrix)
-subplot(ROWS, COLS, [25, 32]);
-W_vis_elem = zeros(visin.simopts.net.size, visin.simopts.net.size, visin.simopts.data.trainvsize);
-for idx = 1:visin.simopts.net.size
-    for jdx = 1:visin.simopts.net.size
-        for elem_idx = 1:visin.simopts.data.trainvsize
-            W_vis_elem(idx, jdx, elem_idx) = som(idx, jdx).W(elem_idx);
-            scatter3(idx, jdx, elem_idx, 30, W_vis_elem(idx, jdx, elem_idx), 'filled');
-            hold on; colorbar; set(gcf, 'color', 'white');
-        end
-    end
+figure;
+set(gcf, 'color', 'white'); box off; grid off;
+% present each neurons receptive field (mean input sequence that triggers that neuron - weight vector)
+coln = visin.simopts.net.size; % true for square matrix
+rown = visin.simopts.net.size;
+for sidx = 1:rown*coln
+            subplot(rown, coln, sidx);
+            [ridx, cidx] = ind2sub([coln, rown], sidx);
+            plot(som(cidx, ridx).W); box off; axis xy; axis equal; hold on;
+            switch curr_somid
+                case '1'
+                   plot(visin.netin.trainv1, 'r');
+                case '2'
+                   plot(visin.netin.trainv2, 'm');
+            end
 end
-box off; title('Sensory projections synaptic weights'); axis xy; axis equal;
+fig_title = sprintf('Sensory projections synaptic weights in network %s', curr_somid);suptitle(fig_title);
 
 % synaptic connections strenghts from cross modal Hebbian interaction (H weight matrix)
-subplot(ROWS, COLS, [27, 34]);
-
-H_vis_elem = zeros(visin.simopts.net.size, visin.simopts.net.size, visin.simopts.net.size, visin.simopts.net.size);
-
-for idx = 1:visin.simopts.net.size
-    for jdx = 1:visin.simopts.net.size
-        for idx_elem = 1:visin.simopts.net.size
-            for jdx_elem = 1:visin.simopts.net.size
-                H_vis_elem(idx, jdx, idx_elem, jdx_elem) = som(idx, jdx).H(idx_elem, jdx_elem);
-            end
-        end
-    end
+figure;
+set(gcf, 'color', 'white'); box off; grid off;
+coln = visin.simopts.net.size; % true for square matrix
+rown = visin.simopts.net.size;
+for sidx = 1:rown*coln
+        subplot(rown, coln, sidx);
+        [ridx, cidx] = ind2sub([coln, rown], sidx);
+        % plot the weights for current neuron
+        imagesc(som(cidx, ridx).H(1:visin.simopts.net.size, 1:visin.simopts.net.size)); hold on; colorbar; axis xy;
+        colormap; box off;
 end
-
-% group everything in a horizontal matrix
-temp_horz = zeros(visin.simopts.net.size, visin.simopts.net.size);
-temp_proj_mat = zeros(visin.simopts.net.size, visin.simopts.net.size);
-for iidx = 1:visin.simopts.net.size
-    for ijdx = 1:visin.simopts.net.size
-        % extract the (iidx, ijdx) th entry in the multidim matrix
-        temp_lin_submat = H_vis_elem(iidx, ijdx, :);
-        % remove singleton dimensions
-        temp_lin_squeezed = squeeze(temp_lin_submat);
-        % restore indices and value in visin.simopts.net.sizexvisin.simopts.net.size matrix
-        for idx_temp = 1:length(temp_lin_squeezed)
-            [jdx_proj, idx_proj] = ind2sub([visin.simopts.net.size, visin.simopts.net.size], idx_temp);
-            temp_proj_mat(idx_proj, jdx_proj) = temp_lin_squeezed(idx_temp);
-        end
-        temp_horz =  horzcat(temp_horz, temp_proj_mat);
-    end
-end
-
-% flatten down the horizontal buffer to a square matrix for visualization
-collapsed_view = zeros(visin.simopts.net.size*visin.simopts.net.size, visin.simopts.net.size*visin.simopts.net.size);
-% linear index of the temp horizontal buffer temp_idx
-
-for temp_idx = 1:visin.simopts.net.size*visin.simopts.net.size*visin.simopts.net.size*visin.simopts.net.size
-    [conv_idx, conv_jdx] = ind2sub(size(collapsed_view), temp_idx);
-    collapsed_view(conv_idx, conv_jdx) = temp_horz(temp_idx);
-end
-
-imagesc(collapsed_view(1:visin.simopts.net.size*visin.simopts.net.size, 1:visin.simopts.net.size*visin.simopts.net.size)); hold on; colorbar; axis xy;
-colormap; box off; title('Cross-modal synaptic weights');
-
-
-% synaptic connections strenghts from cross modal Hebbian interaction (H
-% weight matrix) - alternative display using overlapping surfs
-subplot(ROWS, COLS, [29, 36]);
-
-H_vis_elem = zeros(visin.simopts.net.size, visin.simopts.net.size, visin.simopts.net.size, visin.simopts.net.size);
-
-for idx = 1:visin.simopts.net.size
-    for jdx = 1:visin.simopts.net.size
-        for idx_elem = 1:visin.simopts.net.size
-            for jdx_elem = 1:visin.simopts.net.size
-                H_vis_elem(idx, jdx, idx_elem, jdx_elem) = som(idx, jdx).H(idx_elem, jdx_elem);
-            end
-        end
-    end
-end
-
-% plot overlappig surfs
-for idx = 1:visin.simopts.net.size
-    for jdx = 1:visin.simopts.net.size
-                surf(som(idx, jdx).H(1:visin.simopts.net.size, 1:visin.simopts.net.size)); hold on; axis xy; colorbar;
-    end
-end
-box off; title('Cross-modal synaptic weights');
-
+fig_title = sprintf('Cross-modal synaptic weights in network %s', curr_somid);suptitle(fig_title);
+somfig = 1; % fixme - return all handles when visualization is ready
 end
 

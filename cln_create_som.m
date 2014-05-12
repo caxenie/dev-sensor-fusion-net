@@ -15,7 +15,7 @@
 % RETURN
 %   net - struct with data need to run the global network dynamics
 
-function  net = cln_create_som(opt, din)
+function  net = cln_create_som(opt, din, idn)
 % create struct for SOM
 net(1:opt.net.size, 1:opt.net.size) = struct('xpos', 0,...
     'ypos', 0,...
@@ -23,7 +23,8 @@ net(1:opt.net.size, 1:opt.net.size) = struct('xpos', 0,...
     'H'   , zeros(opt.net.size, opt.net.size),...  % Hebbian weights for cross-SOM interaction
     'ad'  , 0.0, ... % direct activation elicited by input vector
     'ai'  , 0.0, ... % indirect activation elicited by cross-SOM interaction
-    'at'  , 0.0 ...  % total joint activation (direct + indirect)
+    'at'  , 0.0, ... % total joint activation (direct + indirect)
+    'id'  , idn ...   % id of the network  
     );
 
 % in order to speed-up computation we init weights in the bounds of the
@@ -43,9 +44,6 @@ for idx = 1:opt.net.size
                 net(idx, jdx).H(kidx, tidx)  = minin + (maxin - minin)*rand;
             end
         end
-%         net(idx, jdx).ad = minin + (maxin - minin)*rand;
-%         net(idx, jdx).ai = minin + (maxin - minin)*rand;
-%         net(idx, jdx).at = minin + (maxin - minin)*rand;
     end
 end
 

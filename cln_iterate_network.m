@@ -19,7 +19,7 @@
 
 function rundata = cln_iterate_network(simopts, netin, som1, som2)
 % network iterator
-net_iter = 1;
+net_iter = 2;
 % quantization error for each map and intermap
 qedir1 = zeros(simopts.net.size, simopts.net.size);
 qedir2 = zeros(simopts.net.size, simopts.net.size);
@@ -60,10 +60,10 @@ while(1)
         % compute the learning rate @ current epoch
         
         % exponential learning rate adaptation
-        alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
+        % alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
         
         % linear learing rate adaptation
-        % alphat(net_iter) = alphat(net_iter-1) * 0.99;
+        alphat(net_iter) = alphat(net_iter-1) * 0.99;
         
         % semi-empirical learning rate adaptation - inverse
         % time adaptation
@@ -71,40 +71,40 @@ while(1)
         % alphat(net_iter) = A/(net_iter + B);
         
         % compute the neighborhood radius size @ current epoch
-        sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
+        % sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
         
         % power-law neighborhood radius size adaptation
-        % sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
+        sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
         
         % adapt the cross-modal interaction params (increase in time)
         
         % cross-modal activation impact on local som learning
-        gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
+        % gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
         
         % linear cross-modal impact factor on learning
-        % gammat(net_iter) = gammat(net_iter-1)*1.01;
-        %if(gammat(net_iter)>1)
-        %    gammat(net_iter) = 1;
-        %end
+        gammat(net_iter) = gammat(net_iter-1)*1.01;
+        if(gammat(net_iter)>1)
+            gammat(net_iter) = 1;
+        end
         
         % inhibitory component to ensure only co-activation
         xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
         
         % linear inhibitory component weight for co-activation
         % in map weights update
-        % xit(net_iter) = xit(net_iter - 1)*1.015;
-        % if(xit(net_iter)>0.07)
-        %    xit(net_iter) = 0.07;
-        %end
+        xit(net_iter) = xit(net_iter - 1)*1.015;
+        if(xit(net_iter)>0.07)
+            xit(net_iter) = 0.07;
+        end
         
         % Hebbian learning rate
-        kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
+        % kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
         
         % linear Hebbian learning rate update
-        %kappat(net_iter) = kappat(net_iter)*1.01;
-        %if(kappat(net_iter)>0.3)
-        %    kappat(net_iter) = 0.3;
-        %end
+        kappat(net_iter) = kappat(net_iter)*1.01;
+        if(kappat(net_iter)>0.3)
+            kappat(net_iter) = 0.3;
+        end
         
         %----------------------------------------------------------------------------------------------------------
         
@@ -165,18 +165,21 @@ while(1)
                             
                             % for SOM2
                             som2(idx, jdx).ad = exp(-(norm([bmudir2.xpos - idx, bmudir2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
-                            
-                            % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
-                                fprintf('-------------Direct Activation Phase------------\n');
-                                % first som
-                                fprintf(1, 'SOM1BMU_DIR = (%d,%d) with ad = 1 \n', bmudir1.xpos, bmudir1.ypos);
-                                fprintf(1, 'SOM1.ad = \n'); [som1.ad]
-                                % second som
-                                fprintf(1, 'SOM2BMU_DIR = (%d,%d) with ad = 1 \n', bmudir2.xpos, bmudir2.ypos);
-                                fprintf(1, 'SOM2.ad = \n'); [som2.ad]
-                            end
-                            
+                        end
+                    end
+                    % check if verbose is on for debugging
+                    if(simopts.verbose == 1)
+                        fprintf('-------------Direct Activation Phase------------\n');
+                        % first som
+                        fprintf(1, 'SOM1BMU_DIR = (%d,%d) with ad = %f \n', bmudir1.xpos, bmudir1.ypos, som1(bmudir1.xpos, bmudir1.ypos).ad);
+                        fprintf(1, 'SOM1.ad = \n'); [som1.ad]
+                        % second som
+                        fprintf(1, 'SOM2BMU_DIR = (%d,%d) with ad = %f \n', bmudir2.xpos, bmudir2.ypos, som2(bmudir2.xpos, bmudir2.ypos).ad);
+                        fprintf(1, 'SOM2.ad = \n'); [som2.ad]
+                    end
+                    
+                    for idx = 1:simopts.net.size
+                        for jdx = 1:simopts.net.size
                             % ---------------------------------------------------------------------------------------------------------
                             % compute the indirect activation
                             
@@ -216,17 +219,6 @@ while(1)
                             bmuind2.xpos = xid; bmuind2.ypos = yid; bmuind2.act = bmval;
                             som2(idx, jdx).ai = exp(-(norm([bmuind2.xpos - idx, bmuind2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
                             
-                            % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
-                                fprintf('-----------Indirect Activation Phase-----------\n');
-                                % first som
-                                fprintf(1, 'SOM1BMU_IND = (%d,%d) with ad = 1 \n', bmuind1.xpos, bmuind1.ypos);
-                                fprintf(1, 'SOM1.ai = \n'); [som1.ai]
-                                % second som
-                                fprintf(1, 'SOM2BMU_IND = (%d,%d) with ad = 1 \n', bmuind2.xpos, bmuind2.ypos);
-                                fprintf(1, 'SOM2.ai = \n'); [som2.ai]
-                            end
-                            
                             % ---------------------------------------------------------------------------------------------------------
                             
                             % compute the joint activation from both afferent
@@ -238,15 +230,30 @@ while(1)
                             % SOM2
                             som2(idx, jdx).at = (1 - gammat(net_iter))*som2(idx, jdx).ad + gammat(net_iter)*som2(idx, jdx).ai;
                             
-                            % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
-                                fprintf('-------------Total Activation Phase------------\n');
-                                % first som
-                                fprintf(1, 'SOM1.at = \n'); [som1.at]
-                                % second som
-                                fprintf(1, 'SOM2.at = \n'); [som2.ad]
-                            end
-                            
+                        end
+                    end
+                    
+                    % check if verbose is on for debugging
+                    if(simopts.verbose == 1)
+                        fprintf('-----------Indirect Activation Phase-----------\n');
+                        % first som
+                        fprintf(1, 'SOM1BMU_IND = (%d,%d) with ad = %f \n', bmuind1.xpos, bmuind1.ypos, som1(bmudir1.xpos, bmudir1.ypos).ad);
+                        fprintf(1, 'SOM1.ai = \n'); [som1.ai]
+                        % second som
+                        fprintf(1, 'SOM2BMU_IND = (%d,%d) with ad = %f \n', bmuind2.xpos, bmuind2.ypos, som2(bmudir2.xpos, bmudir2.ypos).ad);
+                        fprintf(1, 'SOM2.ai = \n'); [som2.ai]
+                    end
+                    % check if verbose is on for debugging
+                    if(simopts.verbose == 1)
+                        fprintf('-------------Total Activation Phase------------\n');
+                        % first som
+                        fprintf(1, 'SOM1.at = \n'); [som1.at]
+                        % second som
+                        fprintf(1, 'SOM2.at = \n'); [som2.ad]
+                    end
+                    
+                    for idx = 1:simopts.net.size
+                        for jdx = 1:simopts.net.size
                             % ---------------------------------------------------------------------------------------------------------
                             
                             % update weights for the current neuron in the BMU
@@ -270,12 +277,7 @@ while(1)
                                 % first som
                                 fprintf(1, 'SOM1_RAW(%d,%d).W = \n', idx, jdx); som1(idx, jdx).W
                             end
-                            
-                            for w_idx = 1:simopts.data.trainvsize
-                                % normalize weights
-                                som1(idx, jdx).W(w_idx) = (som1(idx, jdx).W(w_idx) - min([som1.W]))/max([som1.W]);
-                            end
-                            
+                                                        
                             % check if verbose is on for debugging
                             if(simopts.verbose == 1)
                                 % first som
@@ -294,12 +296,7 @@ while(1)
                                 % second som
                                 fprintf(1, 'SOM2_RAW(%d,%d).W = \n', idx, jdx); som2(idx, jdx).W
                             end
-                            
-                            for w_idx = 1:simopts.data.trainvsize
-                                % normalize weights
-                                som2(idx, jdx).W(w_idx) = (som2(idx, jdx).W(w_idx) - min([som2.W]))/max([som2.W]);
-                            end
-                            
+                                                       
                             % check if verbose is on for debugging
                             if(simopts.verbose == 1)
                                 % second som
@@ -307,6 +304,11 @@ while(1)
                                 fprintf(1, 'SOM2.W = \n'); som2.W
                             end
                             
+                        end
+                    end
+                    
+                    for idx = 1:simopts.net.size
+                        for jdx = 1:simopts.net.size
                             % ---------------------------------------------------------------------------------------------------------
                             % cross-modal Hebbian links update for co-activated
                             % neurons in both SOMs
@@ -319,7 +321,7 @@ while(1)
                                     som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*som1(idx, jdx).at*som2(isom2, jsom2).at;
                                 end
                             end
-                                                        
+                            
                             % check if verbose is on for debugging
                             if(simopts.verbose == 1)
                                 % first som
@@ -373,8 +375,8 @@ while(1)
                     end
                 case 'vectorial'
                     % add vectorized code for the network dynamics and
-                    % learning processes 
-            
+                    % learning processes
+                    
             end % end switch execution type {iterative / vectorized}
         end % end for each entry in the training vector
         net_iter = net_iter + 1;
