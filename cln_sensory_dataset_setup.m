@@ -24,11 +24,12 @@ switch (opts.data.source)
     case 'generated'
         % generate some datasets for analysis
         % create first variable between min and max
-        num_samples = 5000;
+        num_samples = opts.data.trainvsize;
         time_units = (1:num_samples)/opts.data.freqsamp;
         p1 = zeros(1, num_samples);
         for idx = 1:num_samples
-            p1(idx) = 4.0;
+            min = 1; max = 2; variation = min + (max-min)*rand;
+            p1(idx) = 4.0 + variation;
         end
         % second variable
         p2 = p1.*3.43 + 3.5;

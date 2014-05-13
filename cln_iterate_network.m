@@ -19,7 +19,7 @@
 
 function rundata = cln_iterate_network(simopts, netin, som1, som2)
 % network iterator
-net_iter = 2;
+net_iter = 1;
 % quantization error for each map and intermap
 qedir1 = zeros(simopts.net.size, simopts.net.size);
 qedir2 = zeros(simopts.net.size, simopts.net.size);
@@ -42,71 +42,101 @@ tau = 1000;
 while(1)
     % check if we finished training
     if(net_iter <= simopts.net.maxepochs)
-        % present a vector from each training data set to the network's
-        % SOMs - afferent projections from sensors
         
         % adaptive process parameters (learning rates, cross-modal
         % modulation factor etc.
+        switch(simopts.net.params)
+            case 'fixed'
+                % -------------------------------------------------------------------------------
+                % compute the learning rate @ current epoch
+                alphat(net_iter) = alphat(1);
+                
+                % -------------------------------------------------------------------------------
+                % compute the neighborhood radius size @ current epoch
+                sigmat(net_iter) = sigmat(1);
+                
+                % -------------------------------------------------------------------------------
+                % adapt the cross-modal interaction params (increase in time)
+                gammat(net_iter) = gammat(1);
+                
+                % -------------------------------------------------------------------------------
+                % inhibitory component for co-activation
+                xit(net_iter) = xit(1);
+                
+                % -------------------------------------------------------------------------------
+                % Hebbian learning rate
+                kappat(net_iter) = kappat(1);
+                
+            case 'adaptive'
+                
+                % use the same learning parameters for both SOM
+                
+                % for thresholding of the adaptive parameters use
+                %   param_out = min( max( param_in, min_value ), max_value );
+                
+                % the learning rate and radius decrease over time to
+                % enable learning on a coarse and then on a finer time
+                % scale
+                
+                % -------------------------------------------------------------------------------
+                % compute the learning rate @ current epoch
+                
+                % exponential learning rate adaptation
+                alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
+                
+                % linear learing rate adaptation
+                % alphat(net_iter) = alphat(net_iter-1) * 0.99;
+                
+                % semi-empirical learning rate adaptation - inverse
+                % time adaptation
+                % A = simopts.net.maxepochs/100.0; B = A;
+                % alphat(net_iter) = A/(net_iter + B);
+                
+                % -------------------------------------------------------------------------------
+                % compute the neighborhood radius size @ current epoch
+                sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
+                
+                % power-law neighborhood radius size adaptation
+                % sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
+                
+                % -------------------------------------------------------------------------------
+                % adapt the cross-modal interaction params (increase in time)
+                
+                % cross-modal activation impact on local som learning
+                gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
+                
+                % linear cross-modal impact factor on learning
+                % gammat(net_iter) = gammat(net_iter-1)*1.01;
+                % if(gammat(net_iter)>1)
+                %     gammat(net_iter) = 1;
+                % end
+                
+                % -------------------------------------------------------------------------------
+                % inhibitory component to ensure only co-activation
+                xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
+                
+                % linear inhibitory component weight for co-activation
+                % in map weights update
+                % xit(net_iter) = xit(net_iter - 1)*1.015;
+                % if(xit(net_iter)>0.07)
+                %     xit(net_iter) = 0.07;
+                % end
+                
+                % -------------------------------------------------------------------------------
+                % Hebbian learning rate
+                kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
+                
+                % linear Hebbian learning rate update
+                % kappat(net_iter) = kappat(net_iter)*1.01;
+                % if(kappat(net_iter)>0.3)
+                %     kappat(net_iter) = 0.3;
+                % end
+                
+                %----------------------------------------------------------------------------------------------------------
+        end % end switch adaptive process parameteres type selection
         
-        % use the same learning parameters for both SOM
-        
-        % for thresholding of the adaptive parameters use
-        %   param_out = min( max( param_in, min_value ), max_value );
-        
-        % the learning rate and radius decrease over time to
-        % enable learning on a coarse and then on a finer time
-        % scale
-        
-        % compute the learning rate @ current epoch
-        
-        % exponential learning rate adaptation
-        alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
-        
-        % linear learing rate adaptation
-        % alphat(net_iter) = alphat(net_iter-1) * 0.99;
-        
-        % semi-empirical learning rate adaptation - inverse
-        % time adaptation
-        % A = simopts.net.maxepochs/100.0; B = A;
-        % alphat(net_iter) = A/(net_iter + B);
-        
-        % compute the neighborhood radius size @ current epoch
-        sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
-        
-        % power-law neighborhood radius size adaptation
-        % sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
-        
-        % adapt the cross-modal interaction params (increase in time)
-        
-        % cross-modal activation impact on local som learning
-        gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
-        
-        % linear cross-modal impact factor on learning
-        % gammat(net_iter) = gammat(net_iter-1)*1.01;
-        % if(gammat(net_iter)>1)
-        %     gammat(net_iter) = 1;
-        % end
-        
-        % inhibitory component to ensure only co-activation
-        xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
-        
-        % linear inhibitory component weight for co-activation
-        % in map weights update
-        % xit(net_iter) = xit(net_iter - 1)*1.015;
-        % if(xit(net_iter)>0.07)
-        %     xit(net_iter) = 0.07;
-        % end
-        
-        % Hebbian learning rate
-        kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
-        
-        % linear Hebbian learning rate update
-        % kappat(net_iter) = kappat(net_iter)*1.01;
-        % if(kappat(net_iter)>0.3)
-        %     kappat(net_iter) = 0.3;
-        % end
-        
-        %----------------------------------------------------------------------------------------------------------
+        % present a vector from each training data set to the network's
+        % SOMs - afferent projections from sensors
         
         for trainv_idx = 1:netin.trainsetsize
             % chose the execution mode iterative (element-wise) or
@@ -191,7 +221,7 @@ while(1)
                                             % sum of all products between direct activation
                                             % and cross-som Hebbian weights
                                             cross_mod2(isom1, jsom1) = cross_mod2(isom1, jsom1) + ...
-                                                som2(isom2, jsom2).ad*som1(isom2, jsom2).H(isom1, jsom1);
+                                                som2(isom2, jsom2).ad*som2(isom2, jsom2).H(isom1, jsom1);
                                         end
                                     end
                                 end
@@ -242,9 +272,7 @@ while(1)
                         % second som
                         fprintf(1, 'SOM2BMU_IND = (%d,%d) with ad = %f \n', bmuind2.xpos, bmuind2.ypos, som2(bmudir2.xpos, bmudir2.ypos).ad);
                         fprintf(1, 'SOM2.ai = \n'); [som2.ai]
-                    end
-                    % check if verbose is on for debugging
-                    if(simopts.verbose == 1)
+                        
                         fprintf('-------------Total Activation Phase------------\n');
                         % first som
                         fprintf(1, 'SOM1.at = \n'); [som1.at]
@@ -276,13 +304,8 @@ while(1)
                                 fprintf('-----------Map Update Phase------------\n');
                                 % first som
                                 fprintf(1, 'SOM1_RAW(%d,%d).W = \n', idx, jdx); som1(idx, jdx).W
-                            end
-                                                        
-                            % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
-                                % first som
-                                fprintf(1, 'SOM1_NORM(%d,%d).W = \n', idx, jdx); som1(idx, jdx).W
                                 fprintf(1, 'SOM1.W = \n'); som1.W
+                                
                             end
                             
                             % update SOM2
@@ -295,18 +318,42 @@ while(1)
                             if(simopts.verbose == 1)
                                 % second som
                                 fprintf(1, 'SOM2_RAW(%d,%d).W = \n', idx, jdx); som2(idx, jdx).W
-                            end
-                                                       
-                            % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
-                                % second som
-                                fprintf(1, 'SOM2_NORM(%d,%d).W = \n', idx, jdx); som2(idx, jdx).W
                                 fprintf(1, 'SOM2.W = \n'); som2.W
                             end
                             
                         end
                     end
-                    
+                                   
+                    % map weights normalization
+                    for idx = 1:simopts.net.size
+                        for jdx = 1:simopts.net.size
+                            sum1 = sum([som1(idx, jdx).W]);
+                            sum2 = sum([som2(idx, jdx).W]);
+                                                        
+                            % update SOM1
+                            for w_idx = 1:simopts.data.trainvsize
+                               som1(idx, jdx).W(w_idx) = som1(idx, jdx).W(w_idx)/sum1;
+                            end
+                            
+                            % check if verbose is on for debugging
+                            if(simopts.verbose == 1)
+                                % first som
+                                fprintf(1, 'SOM1_NORM(%d,%d).W = \n', idx, jdx); som1(idx, jdx).W
+                            end
+                            
+                            % update SOM2
+                            for w_idx = 1:simopts.data.trainvsize
+                                som2(idx, jdx).W(w_idx) = som2(idx, jdx).W(w_idx)/sum2;
+                            end
+                            
+                            % check if verbose is on for debugging
+                            if(simopts.verbose == 1)
+                                % second som
+                                fprintf(1, 'SOM2_NORM(%d,%d).W = \n', idx, jdx); som2(idx, jdx).W
+                            end
+                        end
+                    end
+                        
                     for idx = 1:simopts.net.size
                         for jdx = 1:simopts.net.size
                             % ---------------------------------------------------------------------------------------------------------
@@ -317,7 +364,7 @@ while(1)
                             for isom2 = 1:simopts.net.size
                                 for jsom2 = 1:simopts.net.size
                                     % compute new weight using Hebbian rule
-                                    % rule deltaH = K*preH*postH
+                                    % deltaH = K*preH*postH
                                     som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*som1(idx, jdx).at*som2(isom2, jsom2).at;
                                 end
                             end
@@ -327,6 +374,26 @@ while(1)
                                 % first som
                                 fprintf(1, 'SOM1_RAW(%d,%d).H= \n', idx, jdx); som1(idx, jdx).H
                             end
+                            
+                            % update for SOM2
+                            for isom1 = 1:simopts.net.size
+                                for jsom1 = 1:simopts.net.size
+                                    % compute new weight using Hebbian rule
+                                    % deltaH = K*preH*postH
+                                    som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*som2(idx, jdx).at*som1(isom1, jsom1).at;
+                                end
+                            end
+                            
+                            % check if verbose is on for debugging
+                            if(simopts.verbose == 1)
+                                % second som
+                                fprintf(1, 'SOM2_RAW(%d,%d).H= \n', idx, jdx); som2(idx, jdx).H
+                            end
+                        end
+                    end
+                    % cross-modal Hebbian links normalization and update
+                    for idx = 1:simopts.net.size
+                        for jdx = 1:simopts.net.size
                             
                             for isom2 = 1:simopts.net.size
                                 for jsom2 = 1:simopts.net.size
@@ -342,21 +409,6 @@ while(1)
                                 fprintf(1, 'SOM1.H = \n'); som1.H
                             end
                             
-                            % update for SOM2
-                            for isom1 = 1:simopts.net.size
-                                for jsom1 = 1:simopts.net.size
-                                    % compute new weight using Hebbian rule
-                                    % rule deltaH = K*preH*postH
-                                    som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*som2(idx, jdx).at*som1(isom1, jsom1).at;
-                                end
-                            end
-                            
-                            % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
-                                % second som
-                                fprintf(1, 'SOM2_RAW(%d,%d).H= \n', idx, jdx); som2(idx, jdx).H
-                            end
-                            
                             for isom1 = 1:simopts.net.size
                                 for jsom1 = 1:simopts.net.size
                                     % normalize weights
@@ -370,9 +422,9 @@ while(1)
                                 fprintf(1, 'SOM2_NORM(%d,%d).H= \n', idx, jdx); som2(idx, jdx).H
                                 fprintf(1, 'SOM2.H = \n'); som2.H
                             end
-                            % ---------------------------------------------------------------------------------------------------------
                         end
                     end
+                    % ---------------------------------------------------------------------------------------------------------
                 case 'vectorial'
                     % add vectorized code for the network dynamics and
                     % learning processes

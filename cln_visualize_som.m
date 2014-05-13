@@ -20,38 +20,42 @@ somid = [som.id]; curr_somid = somid(end);
 % total activity in each neurons in the SOM
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
-at_vis = zeros(visin.simopts.net.size, visin.simopts.net.size);
+% visualization of direct activity
+visual_som = zeros(visin.simopts.net.size, visin.simopts.net.size);
 for idx = 1:visin.simopts.net.size
     for jdx = 1:visin.simopts.net.size
-        at_vis(idx, jdx) = som(idx, jdx).at;
+        visual_som(idx, jdx) = som(idx, jdx).at;
     end
 end
-imagesc((at_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); colorbar; axis xy; colormap; box off;
+subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy;
+subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy;
 fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title);
 
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
-ad_vis = zeros(visin.simopts.net.size, visin.simopts.net.size);
+% visualization of direct activity
+visual_som = zeros(visin.simopts.net.size, visin.simopts.net.size);
 for idx = 1:visin.simopts.net.size
     for jdx = 1:visin.simopts.net.size
-        ad_vis(idx, jdx) = som(idx, jdx).ad;
+        visual_som(idx, jdx) = som(idx, jdx).ad;
     end
 end
-imagesc((ad_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); colorbar; axis xy;
-colormap; box off;
+subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy;
+subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy;
 fig_title = sprintf('Sensory elicited act. in network %s', curr_somid); suptitle(fig_title);
 
 % indirect activity elicited by cross-modal Hebbian linkage (plastic connections)
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
-ai_vis = zeros(visin.simopts.net.size, visin.simopts.net.size);
+% visualization of indirect activity (cross-modal elicited activity)
+visual_som = zeros(visin.simopts.net.size, visin.simopts.net.size);
 for idx = 1:visin.simopts.net.size
     for jdx = 1:visin.simopts.net.size
-        ai_vis(idx, jdx) = som(idx, jdx).ai;
+        visual_som(idx, jdx) = som(idx, jdx).ai;
     end
 end
-imagesc((ai_vis(1:visin.simopts.net.size, 1:visin.simopts.net.size))); colorbar; axis xy;
-colormap; box off;
+subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy;
+subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy;
 fig_title = sprintf('Cross-modal elicited act. in network %s', curr_somid);suptitle(fig_title);
 
 % synaptic connections strenghts from sensory projections (W weight matrix)
@@ -61,15 +65,15 @@ set(gcf, 'color', 'white'); box off; grid off;
 coln = visin.simopts.net.size; % true for square matrix
 rown = visin.simopts.net.size;
 for sidx = 1:rown*coln
-            subplot(rown, coln, sidx);
-            [ridx, cidx] = ind2sub([coln, rown], sidx);
-            plot(som(cidx, ridx).W); box off; axis xy; axis equal; hold on;
-            switch curr_somid
-                case '1'
-                   plot(visin.netin.trainv1, 'r');
-                case '2'
-                   plot(visin.netin.trainv2, 'm');
-            end
+    subplot(rown, coln, sidx);
+    [ridx, cidx] = ind2sub([coln, rown], sidx);
+    plot(som(cidx, ridx).W); box off; axis xy; axis equal; hold on;
+    switch curr_somid
+        case '1'
+            plot(visin.netin.trainv1, 'r');
+        case '2'
+            plot(visin.netin.trainv2, 'm');
+    end
 end
 fig_title = sprintf('Sensory projections synaptic weights in network %s', curr_somid);suptitle(fig_title);
 
@@ -79,11 +83,11 @@ set(gcf, 'color', 'white'); box off; grid off;
 coln = visin.simopts.net.size; % true for square matrix
 rown = visin.simopts.net.size;
 for sidx = 1:rown*coln
-        subplot(rown, coln, sidx);
-        [ridx, cidx] = ind2sub([coln, rown], sidx);
-        % plot the weights for current neuron
-        imagesc(som(cidx, ridx).H(1:visin.simopts.net.size, 1:visin.simopts.net.size)); hold on; colorbar; axis xy;
-        colormap; box off;
+    subplot(rown, coln, sidx);
+    [ridx, cidx] = ind2sub([coln, rown], sidx);
+    % plot the weights for current neuron
+    imagesc(som(cidx, ridx).H(1:visin.simopts.net.size, 1:visin.simopts.net.size)); hold on; colorbar; axis xy;
+    colormap; box off;
 end
 fig_title = sprintf('Cross-modal synaptic weights in network %s', curr_somid);suptitle(fig_title);
 somfig = 1; % fixme - return all handles when visualization is ready

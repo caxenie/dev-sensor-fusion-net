@@ -31,7 +31,7 @@ vishdl(3) = figure;
 set(gcf, 'color', 'white'); box off; grid off;
 plot(visin.alphat, '.b');
 % plot the neighborhood kernel radius adaptation
-hold on; plot(visin.sigmat, '.r'); 
+hold on; plot(visin.sigmat, '.r');
 hold on; plot(visin.gammat, '.g');
 hold on; plot(visin.xit, '*m');
 hold on; plot(visin.kappat, '*k');
@@ -39,6 +39,7 @@ suptitle('Adaptation parameters'); xlabel('Epochs');
 legend('Learning rate','Neighborhood kernel radius','Total activation gain param','Inhibitory gain in W update','Hebbian learning rate in cross-modal interaction'); box off;
 % visualize a sample input vector
 vishdl(4) = figure;
+set(gcf, 'color', 'white'); box off; grid off;
 switch visin.simopts.data.trainvtype
     case 'full'
         plot(visin.netin.raw1, '.b'); hold on;
