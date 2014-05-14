@@ -41,7 +41,7 @@ for idx = 1:opt.net.size
         end
         for kidx = 1:opt.net.size
             for tidx = 1:opt.net.size
-                net(idx, jdx).H(kidx, tidx)  = minin + (maxin - minin)*rand;
+                net(idx, jdx).H(kidx, tidx)  = rand;
             end
         end
     end

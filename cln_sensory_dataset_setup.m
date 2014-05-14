@@ -24,12 +24,12 @@ switch (opts.data.source)
     case 'generated'
         % generate some datasets for analysis
         % create first variable between min and max
-        num_samples = opts.data.trainvsize;
+        num_samples = opts.data.trainlen;
         time_units = (1:num_samples)/opts.data.freqsamp;
         p1 = zeros(1, num_samples);
         for idx = 1:num_samples
-            min = 1; max = 2; variation = min + (max-min)*rand;
-            p1(idx) = 4.0 + variation;
+            min = 1; max = 2; additive_noise = min + (max-min)*rand;
+            p1(idx) = 4.0 + additive_noise;
         end
         % second variable
         p2 = p1.*3.43 + 3.5;
@@ -86,18 +86,14 @@ switch(opts.data.trainvtype)
         
         training_set_p1(1, :) = p1(1:opts.data.trainvsize);
         training_set_p2(1, :) = p2(1:opts.data.trainvsize);
-        
         iidx = 1;
-        
         % fill the training datasets
         for idx = 2:(training_set_size)
             for jdx = 1:opts.data.trainvsize
                 training_set_p1(idx, jdx) = p1(((iidx)*TAU_SLIDE + jdx));
                 training_set_p2(idx, jdx) = p2(((iidx)*TAU_SLIDE + jdx));
             end
-            if(mod(idx,2)==0)
-                iidx = iidx + 1;
-            end
+            iidx = iidx + 1;
             if(((iidx)*TAU_SLIDE + opts.data.trainvsize)>length(p1))
                 break;
             end

@@ -12,7 +12,7 @@
 %   som - network to visualize
 %
 % RETURN
-%   vishdl - figures handles for later access
+%   somfig - figures handles for later access
 
 function somfig = cln_visualize_som(visin, som)
 % get the id of the current som
@@ -70,9 +70,9 @@ for sidx = 1:rown*coln
     plot(som(cidx, ridx).W); box off; axis xy; axis equal; hold on;
     switch curr_somid
         case '1'
-            plot(visin.netin.trainv1, 'r');
+            plot(visin.netin.trainv1(end,:), 'r');
         case '2'
-            plot(visin.netin.trainv2, 'm');
+            plot(visin.netin.trainv2(end,:), 'm');
     end
 end
 fig_title = sprintf('Sensory projections synaptic weights in network %s', curr_somid);suptitle(fig_title);
@@ -86,7 +86,11 @@ for sidx = 1:rown*coln
     subplot(rown, coln, sidx);
     [ridx, cidx] = ind2sub([coln, rown], sidx);
     % plot the weights for current neuron
-    imagesc(som(cidx, ridx).H(1:visin.simopts.net.size, 1:visin.simopts.net.size)); hold on; colorbar; axis xy;
+    imagesc(som(cidx, ridx).H(1:visin.simopts.net.size, 1:visin.simopts.net.size)); hold on; 
+    if(ridx == visin.simopts.net.size) 
+        colorbar; 
+    end
+    axis xy;
     colormap; box off;
 end
 fig_title = sprintf('Cross-modal synaptic weights in network %s', curr_somid);suptitle(fig_title);

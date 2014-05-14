@@ -22,37 +22,30 @@ subplot(2, 1, 1);plot(visin.netin.raw1, '.b'); box off; grid off;
 title('Input var P1');
 subplot(2, 1, 2);plot(visin.netin.raw2, '.g'); box off; grid off;
 title('Input var P2'); xlabel('Samples');
-% visualize cross-correlation
-vishdl(2) = figure;
-set(gcf, 'color', 'white');
-plot(xcorr(visin.netin.raw1, visin.netin.raw2), '.r'); box off; grid off;
-suptitle('Xcorr analysis'); xlabel('Samples');
 vishdl(3) = figure;
 set(gcf, 'color', 'white'); box off; grid off;
 plot(visin.alphat, '.b');
 % plot the neighborhood kernel radius adaptation
-hold on; plot(visin.sigmat, '.r');
-hold on; plot(visin.gammat, '.g');
-hold on; plot(visin.xit, '*m');
-hold on; plot(visin.kappat, '*k');
+hold on; plot(visin.sigmat, '.r'); hold on; plot(visin.gammat, '.g');
+hold on; plot(visin.xit, '*m'); hold on; plot(visin.kappat, '*k');
 suptitle('Adaptation parameters'); xlabel('Epochs');
 legend('Learning rate','Neighborhood kernel radius','Total activation gain param','Inhibitory gain in W update','Hebbian learning rate in cross-modal interaction'); box off;
 % visualize a sample input vector
 vishdl(4) = figure;
 set(gcf, 'color', 'white'); box off; grid off;
+start_show_idx = 0; samples_show_num = 5;
+window_slide_time = 10; % make sure that is always < IN_SIZE
 switch visin.simopts.data.trainvtype
     case 'full'
         plot(visin.netin.raw1, '.b'); hold on;
         plot(visin.netin.raw2, '.g'); box off; grid off;
     case 'interval'
-        start_show_idx = 20; samples_show_num = 10;
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); set(gcf, 'color', 'white'); box off; grid off;
             plot(visin.netin.trainv1(start_show_idx+idx, :), 'r'); hold on;
             plot(visin.netin.trainv2(start_show_idx+idx, :), 'b');
         end
     case 'sliding'
-        start_show_idx = 20; samples_show_num = 10; window_slide_time = 10; % CAREFUL ! window_slide_time < IN_SIZE
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); set(gcf, 'color', 'white'); box off; grid off;
             plot(visin.netin.trainv1(start_show_idx+idx*window_slide_time, :), 'r'); hold on;
