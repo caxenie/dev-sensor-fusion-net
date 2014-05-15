@@ -19,7 +19,7 @@
 
 function rundata = cln_iterate_network(simopts, netin, som1, som2)
 % network iterator
-net_iter = 1;
+net_iter = 2;
 % quantization error for each map and intermap
 qedir1 = zeros(simopts.net.size, simopts.net.size);
 qedir2 = zeros(simopts.net.size, simopts.net.size);
@@ -37,7 +37,7 @@ sigmat(1) = simopts.net.sigma;
 gammat(1) = simopts.net.gamma;
 xit(1)    = simopts.net.xi;
 kappat(1) = simopts.net.kappa;
-tau = 1000;
+tau = 5000;
 % main loop of the network
 while(1)
     % check if we finished training
@@ -82,10 +82,10 @@ while(1)
                 % compute the learning rate @ current epoch
                 
                 % exponential learning rate adaptation
-                alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
+                % alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
                 
                 % linear learing rate adaptation
-                % alphat(net_iter) = alphat(net_iter-1) * 0.99;
+                alphat(net_iter) = alphat(net_iter-1) * 0.99;
                 
                 % semi-empirical learning rate adaptation - inverse
                 % time adaptation
@@ -94,30 +94,30 @@ while(1)
                 
                 % -------------------------------------------------------------------------------
                 % compute the neighborhood radius size @ current epoch
-                sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
+                % sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
                 
                 % power-law neighborhood radius size adaptation
-                % sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
+                sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
                 
                 % -------------------------------------------------------------------------------
                 % adapt the cross-modal interaction params (increase in time)
                 
                 % cross-modal activation impact on local som learning
-                gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
+                % gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
                 
                 % linear cross-modal impact factor on learning
-                % gammat(net_iter) = gammat(net_iter-1)*1.01;
-                % if(gammat(net_iter)>1)
-                %     gammat(net_iter) = 1;
-                % end
+                gammat(net_iter) = gammat(net_iter-1)*1.01;
+%                 if(gammat(net_iter)>1)
+%                      gammat(net_iter) = 1;
+%                 end
                 
                 % -------------------------------------------------------------------------------
                 % inhibitory component to ensure only co-activation
-                xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
+                % xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
                 
                 % linear inhibitory component weight for co-activation
                 % in map weights update
-                % xit(net_iter) = xit(net_iter - 1)*1.015;
+                xit(net_iter) = xit(net_iter - 1)*1.015;
                 % if(xit(net_iter)>0.07)
                 %     xit(net_iter) = 0.07;
                 % end
@@ -127,7 +127,7 @@ while(1)
                 kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
                 
                 % linear Hebbian learning rate update
-                % kappat(net_iter) = kappat(net_iter)*1.01;
+                kappat(net_iter) = kappat(net_iter)*1.01;
                 % if(kappat(net_iter)>0.3)
                 %     kappat(net_iter) = 0.3;
                 % end
@@ -295,8 +295,8 @@ while(1)
                             
                             % update SOM1
                             for w_idx = 1:simopts.data.trainvsize
-                                som1(idx, jdx).W(w_idx) = som1(idx, jdx).W(w_idx) + alphat(net_iter)*som1(idx, jdx).at*qedir1(idx, jdx)-...
-                                    xit(net_iter)*(som1(idx, jdx).ad - som1(idx, jdx).at)*qedir1(idx, jdx);
+                                som1(idx, jdx).W(w_idx)= som1(idx, jdx).W(w_idx) + alphat(net_iter)*som1(idx, jdx).at*(netin.trainv1(trainv_idx, w_idx) - som1(idx, jdx).W(w_idx))-...
+                                    xit(net_iter)*(som1(idx, jdx).ad - som1(idx, jdx).at)*(netin.trainv1(trainv_idx, w_idx) - som1(idx, jdx).W(w_idx));
                             end
                             
                             % check if verbose is on for debugging
@@ -310,8 +310,8 @@ while(1)
                             
                             % update SOM2
                             for w_idx = 1:simopts.data.trainvsize
-                                som2(idx, jdx).W(w_idx) = som2(idx, jdx).W(w_idx) + alphat(net_iter)*som2(idx, jdx).at*qedir2(idx, jdx)-...
-                                    xit(net_iter)*(som2(idx, jdx).ad - som2(idx, jdx).at)*qedir2(idx, jdx);
+                                som2(idx, jdx).W(w_idx) = som2(idx, jdx).W(w_idx) + alphat(net_iter)*som2(idx, jdx).at*(netin.trainv2(trainv_idx, w_idx) - som2(idx, jdx).W(w_idx))-...
+                                    xit(net_iter)*(som2(idx, jdx).ad - som2(idx, jdx).at)*(netin.trainv2(trainv_idx, w_idx) - som2(idx, jdx).W(w_idx));
                             end
                             
                             % check if verbose is on for debugging
@@ -323,37 +323,37 @@ while(1)
                             
                         end
                     end
-                                   
-                    % map weights normalization
-                    for idx = 1:simopts.net.size
-                        for jdx = 1:simopts.net.size
-                            sum1 = sum([som1(idx, jdx).W]);
-                            sum2 = sum([som2(idx, jdx).W]);
-                                                        
-                            % update SOM1
-                            for w_idx = 1:simopts.data.trainvsize
-                               som1(idx, jdx).W(w_idx) = som1(idx, jdx).W(w_idx)/sum1;
-                            end
-                            
-                            % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
-                                % first som
-                                fprintf(1, 'SOM1_NORM(%d,%d).W = \n', idx, jdx); som1(idx, jdx).W
-                            end
-                            
-                            % update SOM2
-                            for w_idx = 1:simopts.data.trainvsize
-                                som2(idx, jdx).W(w_idx) = som2(idx, jdx).W(w_idx)/sum2;
-                            end
-                            
-                            % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
-                                % second som
-                                fprintf(1, 'SOM2_NORM(%d,%d).W = \n', idx, jdx); som2(idx, jdx).W
-                            end
-                        end
-                    end
-                        
+%                                    
+%                     % map weights normalization
+%                     for idx = 1:simopts.net.size
+%                         for jdx = 1:simopts.net.size
+%                             norm_factor1 = norm([som1(idx, jdx).W]);
+%                             norm_factor2 = norm([som2(idx, jdx).W]);
+%                                                         
+%                             % update SOM1
+%                             for w_idx = 1:simopts.data.trainvsize
+%                                som1(idx, jdx).W(w_idx) = som1(idx, jdx).W(w_idx)/norm_factor1;
+%                             end
+%                             
+%                             % check if verbose is on for debugging
+%                             if(simopts.verbose == 1)
+%                                 % first som
+%                                 fprintf(1, 'SOM1_NORM(%d,%d).W = \n', idx, jdx); som1(idx, jdx).W
+%                             end
+%                             
+%                             % update SOM2
+%                             for w_idx = 1:simopts.data.trainvsize
+%                                 som2(idx, jdx).W(w_idx) = som2(idx, jdx).W(w_idx)/norm_factor2;
+%                             end
+%                             
+%                             % check if verbose is on for debugging
+%                             if(simopts.verbose == 1)
+%                                 % second som
+%                                 fprintf(1, 'SOM2_NORM(%d,%d).W = \n', idx, jdx); som2(idx, jdx).W
+%                             end
+%                         end
+%                     end
+%                         
                     for idx = 1:simopts.net.size
                         for jdx = 1:simopts.net.size
                             % ---------------------------------------------------------------------------------------------------------
@@ -398,7 +398,7 @@ while(1)
                             for isom2 = 1:simopts.net.size
                                 for jsom2 = 1:simopts.net.size
                                     % normalize weights
-                                    som1(idx, jdx).H(isom2, jsom2) = (som1(idx, jdx).H(isom2, jsom2) - min(min([som1.H])))/max(max([som1.H]));
+                                    som1(idx, jdx).H(isom2, jsom2) = (som1(idx, jdx).H(isom2, jsom2) - min(min([som1.H])))/(max(max([som1.H])) - min(min([som1.H])));
                                 end
                             end
                             
@@ -412,7 +412,7 @@ while(1)
                             for isom1 = 1:simopts.net.size
                                 for jsom1 = 1:simopts.net.size
                                     % normalize weights
-                                    som2(idx, jdx).H(isom1, jsom1) = (som2(idx, jdx).H(isom1, jsom1) - min(min([som2.H])))/max(max([som2.H]));
+                                    som2(idx, jdx).H(isom1, jsom1) = (som2(idx, jdx).H(isom1, jsom1) - min(min([som2.H])))/(max(max([som2.H])) - min(min([som2.H])));
                                 end
                             end
                             
@@ -438,7 +438,7 @@ while(1)
     end
 end
 % save everything to a file and return the name
-file_dump = sprintf('%d_epochs_%d_neurons_%s', simopts.net.maxepochs, simopts.net.size,simopts.data.corrtype);
+file_dump = sprintf('%d_epochs_%d_neurons_%s_source_data_%s_params_%s', simopts.net.maxepochs, simopts.net.size,simopts.data.corrtype, simopts.data.source, simopts.net.params);
 save(file_dump);
 rundata = load(file_dump);
 end
