@@ -46,5 +46,5 @@ for idx = 1:opt.net.size
         end
     end
 end
-
+fprintf(1, 'cln_create_som: Created %s of size %d x %d\n', idn, opt.net.size, opt.net.size);
 end

@@ -67,7 +67,7 @@ rown = visin.simopts.net.size;
 for sidx = 1:rown*coln
     subplot(rown, coln, sidx);
     [ridx, cidx] = ind2sub([coln, rown], sidx);
-    plot(som(cidx, ridx).W); box off; axis xy; axis equal; hold on;
+    plot(som(cidx, ridx).W); box off; axis([1 length(visin.netin.trainv2) min(min([som.W])) max(max([som.W]))]); hold on; 
     switch curr_somid
         case '1'
             plot(visin.netin.trainv1(end,:), 'r');
@@ -90,8 +90,7 @@ for sidx = 1:rown*coln
     if(ridx == visin.simopts.net.size) 
         colorbar; 
     end
-    axis xy;
-    colormap; box off;
+    axis xy; colormap; box off;
 end
 fig_title = sprintf('Cross-modal synaptic weights in network %s', curr_somid);suptitle(fig_title);
 somfig = 1; % fixme - return all handles when visualization is ready

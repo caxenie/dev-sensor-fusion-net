@@ -33,7 +33,7 @@ legend('Learning rate','Neighborhood kernel radius','Total activation gain param
 % visualize a sample input vector
 vishdl(4) = figure;
 set(gcf, 'color', 'white'); box off; grid off;
-start_show_idx = 0; samples_show_num = 5;
+start_show_idx = 5; samples_show_num = 10;
 window_slide_time = 10; % make sure that is always < IN_SIZE
 switch visin.simopts.data.trainvtype
     case 'full'

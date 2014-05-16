@@ -37,7 +37,21 @@ sigmat(1) = simopts.net.sigma;
 gammat(1) = simopts.net.gamma;
 xit(1)    = simopts.net.xi;
 kappat(1) = simopts.net.kappa;
-tau = 5000;
+tau = 500;
+if(simopts.debug.visual==1)
+    % epoch wise visualization of network activities(direct, indirect and total)
+    act_vis = figure; set(gcf, 'color', 'white'); box off;
+    visual_somd1 = zeros(simopts.net.size, simopts.net.size);
+    visual_somd2 = zeros(simopts.net.size, simopts.net.size);
+    visual_somi1 = zeros(simopts.net.size, simopts.net.size);
+    visual_somi2 = zeros(simopts.net.size, simopts.net.size);
+    visual_somt1 = zeros(simopts.net.size, simopts.net.size);
+    visual_somt2 = zeros(simopts.net.size, simopts.net.size);
+    hweight_vis1 = figure; set(gcf, 'color', 'white'); box off;
+    hweight_vis2 = figure; set(gcf, 'color', 'white'); box off;
+    coln = simopts.net.size; % true for square matrix
+    rown = simopts.net.size;
+end
 % main loop of the network
 while(1)
     % check if we finished training
@@ -82,10 +96,10 @@ while(1)
                 % compute the learning rate @ current epoch
                 
                 % exponential learning rate adaptation
-                % alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
+                alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
                 
                 % linear learing rate adaptation
-                alphat(net_iter) = alphat(net_iter-1) * 0.99;
+                % alphat(net_iter) = alphat(net_iter-1) * 0.99;
                 
                 % semi-empirical learning rate adaptation - inverse
                 % time adaptation
@@ -94,22 +108,22 @@ while(1)
                 
                 % -------------------------------------------------------------------------------
                 % compute the neighborhood radius size @ current epoch
-                % sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
+                sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
                 
                 % power-law neighborhood radius size adaptation
-                sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
+                % sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
                 
                 % -------------------------------------------------------------------------------
                 % adapt the cross-modal interaction params (increase in time)
                 
                 % cross-modal activation impact on local som learning
-                % gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
+                gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
                 
                 % linear cross-modal impact factor on learning
-                gammat(net_iter) = gammat(net_iter-1)*1.01;
-%                 if(gammat(net_iter)>1)
-%                      gammat(net_iter) = 1;
-%                 end
+                % gammat(net_iter) = gammat(net_iter-1)*1.01;
+                % if(gammat(net_iter)>1)
+                %      gammat(net_iter) = 1;
+                % end
                 
                 % -------------------------------------------------------------------------------
                 % inhibitory component to ensure only co-activation
@@ -117,7 +131,7 @@ while(1)
                 
                 % linear inhibitory component weight for co-activation
                 % in map weights update
-                xit(net_iter) = xit(net_iter - 1)*1.015;
+                % xit(net_iter) = xit(net_iter - 1)*1.015;
                 % if(xit(net_iter)>0.07)
                 %     xit(net_iter) = 0.07;
                 % end
@@ -127,7 +141,7 @@ while(1)
                 kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
                 
                 % linear Hebbian learning rate update
-                kappat(net_iter) = kappat(net_iter)*1.01;
+                % kappat(net_iter) = kappat(net_iter)*1.01;
                 % if(kappat(net_iter)>0.3)
                 %     kappat(net_iter) = 0.3;
                 % end
@@ -169,7 +183,7 @@ while(1)
                         end
                     end % end of bmus search loop
                     % check if verbose is on for debugging
-                    if(simopts.verbose == 1)
+                    if(simopts.debug.verbose == 1)
                         % first som
                         fprintf('-------------BMU Search Phase------------\n');
                         fprintf(1, 'SOM1 \n IN_VEC:\n'); netin.trainv1(trainv_idx, :)
@@ -198,7 +212,7 @@ while(1)
                         end
                     end
                     % check if verbose is on for debugging
-                    if(simopts.verbose == 1)
+                    if(simopts.debug.verbose == 1)
                         fprintf('-------------Direct Activation Phase------------\n');
                         % first som
                         fprintf(1, 'SOM1BMU_DIR = (%d,%d) with ad = %f \n', bmudir1.xpos, bmudir1.ypos, som1(bmudir1.xpos, bmudir1.ypos).ad);
@@ -264,7 +278,7 @@ while(1)
                     end
                     
                     % check if verbose is on for debugging
-                    if(simopts.verbose == 1)
+                    if(simopts.debug.verbose == 1)
                         fprintf('-----------Indirect Activation Phase-----------\n');
                         % first som
                         fprintf(1, 'SOM1BMU_IND = (%d,%d) with ad = %f \n', bmuind1.xpos, bmuind1.ypos, som1(bmudir1.xpos, bmudir1.ypos).ad);
@@ -279,6 +293,76 @@ while(1)
                         % second som
                         fprintf(1, 'SOM2.at = \n'); [som2.ad]
                     end
+                    
+                    % check if debug visualization is on
+                    if(simopts.debug.visual == 1)
+                        % epoch wise visualization of network activities(direct, indirect and total)
+                        figure(act_vis);
+                        % --------------------------------------------------------------------------------------
+                        % time delay for visualization
+                        vis_time_delay = 0; % s
+                        % direct activities for the 2 som
+                        % som1
+                        subplot(3,2,1);
+                        for idx = 1:simopts.net.size
+                            for jdx = 1:simopts.net.size
+                                visual_somd1(idx, jdx) = som1(idx, jdx).ad;
+                            end
+                        end
+                        imagesc(visual_somd1(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar; axis xy; pause(vis_time_delay);
+                        title('SOM1 Direct activation');
+                        % som2
+                        subplot(3,2,2);
+                        for idx = 1:simopts.net.size
+                            for jdx = 1:simopts.net.size
+                                visual_somd2(idx, jdx) = som2(idx, jdx).ad;
+                            end
+                        end
+                        imagesc(visual_somd2(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar;  axis xy; pause(vis_time_delay);
+                        title('SOM2 Direct activation');
+                        % --------------------------------------------------------------------------------------
+                        % indirect activities for the 2 som
+                        subplot(3,2,3);
+                        % som1
+                        for idx = 1:simopts.net.size
+                            for jdx = 1:simopts.net.size
+                                visual_somi1(idx, jdx) = som1(idx, jdx).ai;
+                            end
+                        end
+                        imagesc(visual_somi1(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar;  axis xy; pause(vis_time_delay);
+                        title('SOM1 Indirect activation');
+                        subplot(3,2,4);
+                        % som2
+                        for idx = 1:simopts.net.size
+                            for jdx = 1:simopts.net.size
+                                visual_somi2(idx, jdx) = som2(idx, jdx).ai;
+                            end
+                        end
+                        imagesc(visual_somi2(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar;  axis xy; pause(vis_time_delay);
+                        title('SOM2 Indirect activation');
+                        % --------------------------------------------------------------------------------------
+                        % total activities for the 2 som
+                        subplot(3,2,5);
+                        % som1
+                        for idx = 1:simopts.net.size
+                            for jdx = 1:simopts.net.size
+                                visual_somt1(idx, jdx) = som1(idx, jdx).at;
+                            end
+                        end
+                        imagesc(visual_somt1(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar;  axis xy; pause(vis_time_delay);
+                        title('SOM1 Total activation');
+                        subplot(3,2,6);
+                        % som2
+                        for idx = 1:simopts.net.size
+                            for jdx = 1:simopts.net.size
+                                visual_somt2(idx, jdx) = som2(idx, jdx).at;
+                            end
+                        end
+                        imagesc(visual_somt2(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar;  axis xy; pause(vis_time_delay);
+                        title('SOM2 Total activation'); pause(vis_time_delay)
+                        suptitle('Activities in the 2 som networks');
+                        % --------------------------------------------------------------------------------------
+                    end % env verbose and visualization
                     
                     for idx = 1:simopts.net.size
                         for jdx = 1:simopts.net.size
@@ -300,7 +384,7 @@ while(1)
                             end
                             
                             % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
+                            if(simopts.debug.verbose == 1)
                                 fprintf('-----------Map Update Phase------------\n');
                                 % first som
                                 fprintf(1, 'SOM1_RAW(%d,%d).W = \n', idx, jdx); som1(idx, jdx).W
@@ -315,7 +399,7 @@ while(1)
                             end
                             
                             % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
+                            if(simopts.debug.verbose == 1)
                                 % second som
                                 fprintf(1, 'SOM2_RAW(%d,%d).W = \n', idx, jdx); som2(idx, jdx).W
                                 fprintf(1, 'SOM2.W = \n'); som2.W
@@ -323,37 +407,7 @@ while(1)
                             
                         end
                     end
-%                                    
-%                     % map weights normalization
-%                     for idx = 1:simopts.net.size
-%                         for jdx = 1:simopts.net.size
-%                             norm_factor1 = norm([som1(idx, jdx).W]);
-%                             norm_factor2 = norm([som2(idx, jdx).W]);
-%                                                         
-%                             % update SOM1
-%                             for w_idx = 1:simopts.data.trainvsize
-%                                som1(idx, jdx).W(w_idx) = som1(idx, jdx).W(w_idx)/norm_factor1;
-%                             end
-%                             
-%                             % check if verbose is on for debugging
-%                             if(simopts.verbose == 1)
-%                                 % first som
-%                                 fprintf(1, 'SOM1_NORM(%d,%d).W = \n', idx, jdx); som1(idx, jdx).W
-%                             end
-%                             
-%                             % update SOM2
-%                             for w_idx = 1:simopts.data.trainvsize
-%                                 som2(idx, jdx).W(w_idx) = som2(idx, jdx).W(w_idx)/norm_factor2;
-%                             end
-%                             
-%                             % check if verbose is on for debugging
-%                             if(simopts.verbose == 1)
-%                                 % second som
-%                                 fprintf(1, 'SOM2_NORM(%d,%d).W = \n', idx, jdx); som2(idx, jdx).W
-%                             end
-%                         end
-%                     end
-%                         
+                    
                     for idx = 1:simopts.net.size
                         for jdx = 1:simopts.net.size
                             % ---------------------------------------------------------------------------------------------------------
@@ -363,14 +417,22 @@ while(1)
                             % update for SOM1
                             for isom2 = 1:simopts.net.size
                                 for jsom2 = 1:simopts.net.size
-                                    % compute new weight using Hebbian rule
-                                    % deltaH = K*preH*postH
-                                    som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*som1(idx, jdx).at*som2(isom2, jsom2).at;
+                                    switch simopts.net.xmodlearn
+                                        case 'hebb'
+                                            % compute new weight using Hebbian rule
+                                            % deltaH = K*preH*postH
+                                            som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*som1(idx, jdx).at*som2(isom2, jsom2).at;
+                                        case 'covariance'
+                                            % compute new weight using covariance learning (pseudo-Hebbian) rule
+                                            % deltaH = K*(preH - mean(preH))*
+                                            %            (postH - mean(postH));
+                                            som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*(som1(idx, jdx).at - mean([som1.at]))*(som2(isom2, jsom2).at - mean([som2.at]));
+                                    end
                                 end
                             end
                             
                             % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
+                            if(simopts.debug.verbose == 1)
                                 % first som
                                 fprintf(1, 'SOM1_RAW(%d,%d).H= \n', idx, jdx); som1(idx, jdx).H
                             end
@@ -378,19 +440,29 @@ while(1)
                             % update for SOM2
                             for isom1 = 1:simopts.net.size
                                 for jsom1 = 1:simopts.net.size
-                                    % compute new weight using Hebbian rule
-                                    % deltaH = K*preH*postH
-                                    som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*som2(idx, jdx).at*som1(isom1, jsom1).at;
+                                    
+                                    switch simopts.net.xmodlearn
+                                        case 'hebb'
+                                            % compute new weight using Hebbian rule
+                                            % deltaH = K*preH*postH
+                                            som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*som2(idx, jdx).at*som1(isom1, jsom1).at;
+                                        case 'covariance'
+                                            % compute new weight using covariance learning (pseudo-Hebbian) rule
+                                            % deltaH = K*(preH - mean(preH))*
+                                            %            (postH - mean(postH));
+                                            som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*(som2(idx, jdx).at - mean([som2.at]))*(som1(isom1, jsom1).at - mean([som1.at]));
+                                    end
                                 end
                             end
                             
                             % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
+                            if(simopts.debug.verbose == 1)
                                 % second som
                                 fprintf(1, 'SOM2_RAW(%d,%d).H= \n', idx, jdx); som2(idx, jdx).H
                             end
                         end
                     end
+                    
                     % cross-modal Hebbian links normalization and update
                     for idx = 1:simopts.net.size
                         for jdx = 1:simopts.net.size
@@ -403,7 +475,7 @@ while(1)
                             end
                             
                             % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
+                            if(simopts.debug.verbose == 1)
                                 % first som
                                 fprintf(1, 'SOM1_NORM(%d,%d).H= \n', idx, jdx); som1(idx, jdx).H
                                 fprintf(1, 'SOM1.H = \n'); som1.H
@@ -417,13 +489,48 @@ while(1)
                             end
                             
                             % check if verbose is on for debugging
-                            if(simopts.verbose == 1)
+                            if(simopts.debug.verbose == 1)
                                 % second som
                                 fprintf(1, 'SOM2_NORM(%d,%d).H= \n', idx, jdx); som2(idx, jdx).H
                                 fprintf(1, 'SOM2.H = \n'); som2.H
                             end
                         end
                     end
+                    
+                    % check if debug visualization is on
+                    if(simopts.debug.visual == 1)
+                        % epoch wise visualization of hebbian cross-modal
+                        % weight matrices for som1
+                        figure(hweight_vis1);
+                        % --------------------------------------------------------------------------------------
+                        for sidx = 1:rown*coln
+                            subplot(rown, coln, sidx);
+                            [ridx, cidx] = ind2sub([coln, rown], sidx);
+                            % plot the weights for current neuron
+                            imagesc(som1(cidx, ridx).H(1:simopts.net.size, 1:simopts.net.size)); hold on;
+                            if(ridx == simopts.net.size)
+                                colorbar;
+                            end
+                            axis xy; colormap; box off;
+                        end
+                        
+                        % weight matrices for som2
+                        figure(hweight_vis2);
+                        % --------------------------------------------------------------------------------------
+                        for sidx = 1:rown*coln
+                            subplot(rown, coln, sidx);
+                            [ridx, cidx] = ind2sub([coln, rown], sidx);
+                            % plot the weights for current neuron
+                            imagesc(som2(cidx, ridx).H(1:simopts.net.size, 1:simopts.net.size)); hold on;
+                            if(ridx == simopts.net.size)
+                                colorbar;
+                            end
+                            axis xy; colormap; box off;
+                        end
+                        
+                        % --------------------------------------------------------------------------------------
+                    end % env debug visualization
+                    
                     % ---------------------------------------------------------------------------------------------------------
                 case 'vectorial'
                     % add vectorized code for the network dynamics and

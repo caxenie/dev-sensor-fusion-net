@@ -17,4 +17,5 @@
 function visin = cln_runtime_dataset_setup(opts)
     runtime_data = load(opts.data.infile);
     visin = runtime_data;
+    fprintf(1, 'cln_runtime_dataset_setup: Visualization dataset was set up.\n');
 end

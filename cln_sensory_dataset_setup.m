@@ -105,4 +105,5 @@ netin.time = time_units';
 netin.trainsetsize = training_set_size;
 netin.trainv1 = training_set_p1;
 netin.trainv2 = training_set_p2;
+fprintf(1, 'cln_sensory_dataset_setup: Created training datasets with %d entries and %d samples.\n', netin.trainsetsize, length(training_set_p1));
 end
