@@ -48,8 +48,8 @@ switch visin.simopts.data.trainvtype
     case 'sliding'
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); set(gcf, 'color', 'white'); box off; grid off;
-            plot(visin.netin.trainv1(start_show_idx+idx*window_slide_time, :), 'r'); hold on;
-            plot(visin.netin.trainv2(start_show_idx+idx*window_slide_time, :), 'b');
+            plot(visin.netin.trainv1, 'r'); hold on;
+            plot(visin.netin.trainv2, 'b');
         end
 end
 suptitle('Sample training vectors for input p1 vs p2');

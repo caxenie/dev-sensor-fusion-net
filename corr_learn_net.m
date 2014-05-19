@@ -10,27 +10,23 @@ clear all; close all; clc; pause(2);
 %% LOAD DATA AND SETUP RUNTIME
 
 % -------------- simulation options parametrization ---------------------
-simopts.mode            = 'run';                 % mode given the function of the script, i.e. run, analyze
+simopts.mode            = 'run';                     % mode given the function of the script, i.e. run, analyze
 simopts.debug.verbose   = 0;                         % flag to activate / inactivate debug verbose
 simopts.debug.visual    = 0;                         % flag to activate / inactivate debug visualization
-simopts.execution       = 'iterative';               % mode to run the simulation: iterative / vectorial
-simopts.data.source     = 'generated';               % data source: generated or sensors (data from robot)
-simopts.data.infile     = 'robot_data_jras_paper';   % robot dataset
-simopts.data.scaling    = -0.0572957795130823;       % data dependent scaling
-simopts.data.freqsamp   = 25;                        % Hz
-simopts.data.trainvtype = 'interval';                 % train vector type, i.e. fixed interval / sliding window / full dataset
-simopts.data.trainvsize = 100;                        % size (in samples) of the input vector
-simopts.data.trainlen   = 5000;                       % number of training vectors in the training data set 
-simopts.data.corrtype   = 'algebraic';               % input data correlation type, i.e. algebraic, temporal, nonlinear
-% ---------------------- parametrize the network -------------------
-simopts.net.size        = 10;                        % size x size square lattice SOM nets
+% ---------- data generation and preprocessing parametrization ----------
+simopts.data.source     = 'sensors';                 % data source: generated or sensors (data from robot)
+simopts.data.trainvtype = 'full';                 % train vector type, i.e. fixed interval / sliding window / full dataset
+simopts.data.trainvsize = 100;                       % size (in samples) of the input vector
+simopts.data.corrtype   = 'algebraic';               % input data correlation type, i.e. algebraic, temporal, nonlinear, delay (sine waves only for generated), amplitude (sine waves only for generated)
+% ---------------------- parametrize the network ------------------------
+simopts.net.size        = 5;                        % size x size square lattice SOM nets
 simopts.net.params      = 'adaptive';                % adaptive processes parameters, i.e. fixed/adaptive
 simopts.net.alpha       = 0.1;                       % initial learning rate (adaptive process)
-simopts.net.sigma       = simopts.net.size/2  ;      % initial neighborhood size (adaptive process)
-simopts.net.maxepochs   = 50;                        % number of epochs to train
+simopts.net.sigma       = simopts.net.size/2+1;      % initial neighborhood size (adaptive process)
+simopts.net.maxepochs   = 4;                        % number of epochs to train
 simopts.net.gamma       = 0.1;                       % cross-modal activation impact on local som learning
 simopts.net.xi          = 0.01;                      % inhibitory component in sensory projections weight update
-simopts.net.kappa       = 0.25;                      % learning rate (gain factor) in Hebbian weight update
+simopts.net.kappa       = 0.35;                      % learning rate (gain factor) in Hebbian weight update
 simopts.net.lambda      = simopts.net.maxepochs/log(simopts.net.sigma); % temporal coef
 simopts.net.xmodlearn   = 'hebb';                    % cross modal learning mechanism, i.e. hebb or covariance (pseudo-Hebbian)
 
