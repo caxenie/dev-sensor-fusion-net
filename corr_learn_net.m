@@ -16,14 +16,15 @@ simopts.debug.visual    = 0;                         % flag to activate / inacti
 % ---------- data generation and preprocessing parametrization ----------
 simopts.data.source     = 'sensors';                 % data source: generated or sensors (data from robot)
 simopts.data.trainvtype = 'full';                 % train vector type, i.e. fixed interval / sliding window / full dataset
-simopts.data.trainvsize = 100;                       % size (in samples) of the input vector
-simopts.data.corrtype   = 'algebraic';               % input data correlation type, i.e. algebraic, temporal, nonlinear, delay (sine waves only for generated), amplitude (sine waves only for generated)
+simopts.data.trainvsize = 5062;                       % size (in samples) of the input vector
+simopts.data.ntrainv    = 100;                       % number of trin vectors for training the network
+simopts.data.corrtype   = 'temporal';               % input data correlation type, i.e. algebraic, temporal, nonlinear, delay (sine waves only for generated), amplitude (sine waves only for generated)
 % ---------------------- parametrize the network ------------------------
-simopts.net.size        = 5;                        % size x size square lattice SOM nets
+simopts.net.size        = 10;                        % size x size square lattice SOM nets
 simopts.net.params      = 'adaptive';                % adaptive processes parameters, i.e. fixed/adaptive
 simopts.net.alpha       = 0.1;                       % initial learning rate (adaptive process)
 simopts.net.sigma       = simopts.net.size/2+1;      % initial neighborhood size (adaptive process)
-simopts.net.maxepochs   = 4;                        % number of epochs to train
+simopts.net.maxepochs   = 100;                        % number of epochs to train
 simopts.net.gamma       = 0.1;                       % cross-modal activation impact on local som learning
 simopts.net.xi          = 0.01;                      % inhibitory component in sensory projections weight update
 simopts.net.kappa       = 0.35;                      % learning rate (gain factor) in Hebbian weight update
