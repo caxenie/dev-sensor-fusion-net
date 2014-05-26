@@ -8,18 +8,18 @@
 % FUNCTION
 % Visualize SOM specific data (adaptive params, activations, weights).
 %
-% A
+% ARGS
 %   som - network to visualize
 %
 % RETURN
-%   somfig - figures handles for later access
+%   void
 
-function somfig = cln_visualize_som(visin, som)
+function cln_visualize_som(visin, som)
 % get the id of the current som
 somid = [som.id]; curr_somid = somid(end);
+%----------------------------------------------------------------
 % total activity in each neurons in the SOM
-figure;
-set(gcf, 'color', 'white'); box off; grid off;
+figure; set(gcf, 'color', 'white'); box off; grid off;
 % visualization of direct activity
 visual_som = zeros(visin.simopts.net.size, visin.simopts.net.size);
 for idx = 1:visin.simopts.net.size
@@ -27,14 +27,19 @@ for idx = 1:visin.simopts.net.size
         visual_som(idx, jdx) = som(idx, jdx).at;
     end
 end
-subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy; 
+subplot(1,2,1); 
+surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); 
+axis xy; csize([0.0, 1.0]);
 xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
-subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy;
+subplot(1,2,2); 
+imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); 
+colormap; colorbar; csize([0.0, 1.0]);
 fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title); 
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
-
+%----------------------------------------------------------------
 figure;
-set(gcf, 'color', 'white'); box off; grid off;
+set(gcf, 'color', 'white'); 
+box off; grid off;
 % visualization of direct activity
 visual_som = zeros(visin.simopts.net.size, visin.simopts.net.size);
 for idx = 1:visin.simopts.net.size
@@ -42,12 +47,15 @@ for idx = 1:visin.simopts.net.size
         visual_som(idx, jdx) = som(idx, jdx).ad;
     end
 end
-subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy;
-xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
-subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy;
+subplot(1,2,1); 
+surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); csize([0.0, 1.0]);
+axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+subplot(1,2,2); 
+imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); 
+colormap; colorbar; axis xy; csize([0.0, 1.0]);
 fig_title = sprintf('Sensory elicited act. in network %s', curr_somid); suptitle(fig_title); 
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
-
+%----------------------------------------------------------------
 % indirect activity elicited by cross-modal Hebbian linkage (plastic connections)
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
@@ -58,12 +66,14 @@ for idx = 1:visin.simopts.net.size
         visual_som(idx, jdx) = som(idx, jdx).ai;
     end
 end
-subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy;
+subplot(1,2,1); 
+surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); csize([0.0, 1.0]);
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
-subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy; 
+subplot(1,2,2); 
+imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy; 
 fig_title = sprintf('Cross-modal elicited act. in network %s', curr_somid);suptitle(fig_title);
 xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
-
+%----------------------------------------------------------------
 % synaptic connections strenghts from sensory projections (W weight matrix)
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
@@ -99,6 +109,5 @@ for sidx = 1:rown*coln
     axis xy; colormap; box off; caxis([0.0 1.0]);
 end
 fig_title = sprintf('Cross-modal synaptic weights in network %s', curr_somid);suptitle(fig_title);
-somfig = 1; % fixme - return all handles when visualization is ready
 end
 
