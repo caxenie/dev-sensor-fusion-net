@@ -29,21 +29,24 @@ switch (opts.data.source)
     case 'generated'
         % generate some datasets for analysis
         % create first variable between minv and maxv
-        num_samples = trainlen;
+        num_samples = opts.data.ntrainv;
         time_units = (1:num_samples)/data_freq_samp;
-        p1 = zeros(1, num_samples);
-        for idx = 1:num_samples
-            minv = 1; maxv = 2; additive_noise = minv + (maxv-minv)*rand;
-            p1(idx) = 4.0 + additive_noise;
-        end
-        % second variable
-        p2 = p1.*3.43 + 3.5;
+        encoded_val = 4.0;
+        p1 = ones(1, num_samples)*encoded_val;
+        p2 = p1.*3;
 end
 % create the second variable depending on the correlation type
 switch(opts.data.corrtype)
     case 'algebraic'
         % simple algebraic correlation
+        minv = 0; maxv = 0.5;
         p2 = p1.*3;
+        for idx=1:num_samples
+           additive_noise = minv + (maxv-minv)*rand;
+           p1(idx) = p1(idx) + additive_noise;
+           additive_noise = minv + (maxv-minv)*rand;
+           p2(idx) = p2(idx) + additive_noise;
+        end
     case 'temporal'
         % temporal integration
         p2 = zeros(1, length(p1)); p2(1) = p1(1);
@@ -111,7 +114,7 @@ switch(opts.data.trainvtype)
         % second we can use a sliding window with a size of trainvsize
         % samples and a time delay of TAU_SLIDE
         
-        TAU_SLIDE = 10; % CAREFUL! TAU_SLIDE < opts.data.trainvsize
+        TAU_SLIDE = 1; % CAREFUL! TAU_SLIDE < opts.data.trainvsize
         
 %         training_set_size = round(2*length(p1)/opts.data.trainvsize)*TAU_SLIDE;
 %         training_set_p1 = zeros(training_set_size, opts.data.trainvsize);
@@ -135,6 +138,10 @@ switch(opts.data.trainvtype)
         % trainvsize sample window size with an overlap of TAU_SLIDE samples
         training_set_p1 = buffer(p1, opts.data.trainvsize, TAU_SLIDE)'; 
         training_set_p2 = buffer(p2, opts.data.trainvsize, TAU_SLIDE)'; 
+        % remove the first and the last training vectors as they are 0->val
+        % and val->0 extensions of the dataset
+        training_set_p1(1,:) = training_set_p1(2,:); training_set_p1(end, :) = training_set_p1(2,:);
+        training_set_p2(1,:) = training_set_p2(2,:); training_set_p2(end, :) = training_set_p2(2,:);
         [~, training_set_size] = size(training_set_p1');
 end
 % embed everything in the return struct

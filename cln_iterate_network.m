@@ -194,7 +194,7 @@ while(1)
                 fprintf(1, 'QE_MAT:\n'); qedir2
             end
             
-            % compute the activations for each neuron in each som s
+            % compute the activations for each neuron in each som
             for idx = 1:simopts.net.size
                 for jdx = 1:simopts.net.size
                     %----------------------------------------------------------------------------------------------------------
@@ -538,7 +538,9 @@ while(1)
     end
 end
 % save everything to a file and return the name
-file_dump = sprintf('%d_epochs_%d_neurons_%s_source_data_%s_params_%s', simopts.net.maxepochs, simopts.net.size,simopts.data.corrtype, simopts.data.source, simopts.net.params);
+file_dump = sprintf('%d_epochs_%d_neurons_%s_source_data_%s_trainvsize_%d_trainvnum_%d_params_%s',...
+            simopts.net.maxepochs, simopts.net.size,simopts.data.corrtype, simopts.data.source, simopts.data.trainvsize,...
+            simopts.data.ntrainv, simopts.net.params);
 save(file_dump);
 rundata = load(file_dump);
 end

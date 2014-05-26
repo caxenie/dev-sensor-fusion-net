@@ -27,9 +27,11 @@ for idx = 1:visin.simopts.net.size
         visual_som(idx, jdx) = som(idx, jdx).at;
     end
 end
-subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy;
+subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy; 
+xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy;
-fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title);
+fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title); 
+axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
@@ -41,8 +43,10 @@ for idx = 1:visin.simopts.net.size
     end
 end
 subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy;
+xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy;
-fig_title = sprintf('Sensory elicited act. in network %s', curr_somid); suptitle(fig_title);
+fig_title = sprintf('Sensory elicited act. in network %s', curr_somid); suptitle(fig_title); 
+axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 
 % indirect activity elicited by cross-modal Hebbian linkage (plastic connections)
 figure;
@@ -55,8 +59,10 @@ for idx = 1:visin.simopts.net.size
     end
 end
 subplot(1,2,1); surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); axis xy;
-subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy;
+axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+subplot(1,2,2); imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy; 
 fig_title = sprintf('Cross-modal elicited act. in network %s', curr_somid);suptitle(fig_title);
+xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 
 % synaptic connections strenghts from sensory projections (W weight matrix)
 figure;
@@ -67,7 +73,7 @@ rown = visin.simopts.net.size;
 for sidx = 1:rown*coln
     subplot(rown, coln, sidx);
     [ridx, cidx] = ind2sub([coln, rown], sidx);
-    plot(som(cidx, ridx).W); box off; axis([1 length(visin.netin.trainv2) min(min([som.W])) max(max([som.W]))]); hold on; 
+    plot(som(cidx, ridx).W); box off; hold on; %axis([1 length(visin.netin.trainv2) min(min([som.W])) max(max([som.W]))]);
     switch curr_somid
         case '1'
             plot(visin.netin.trainv1(end,:), 'r');
@@ -88,9 +94,9 @@ for sidx = 1:rown*coln
     % plot the weights for current neuron
     imagesc(som(cidx, ridx).H(1:visin.simopts.net.size, 1:visin.simopts.net.size)); hold on; 
     %if(ridx == visin.simopts.net.size) 
-    colorbar; 
+    colorbar; caxis([0.0 1.0]);
     %end
-    axis xy; colormap; box off;
+    axis xy; colormap; box off; caxis([0.0 1.0]);
 end
 fig_title = sprintf('Cross-modal synaptic weights in network %s', curr_somid);suptitle(fig_title);
 somfig = 1; % fixme - return all handles when visualization is ready
