@@ -19,17 +19,17 @@
 
 function rundata = cln_iterate_network(simopts, netin, som1, som2)
 % network iterator
-net_iter = 2;
+net_iter = 1;
 % quantization error for each map and intermap
-qedir1 = zeros(simopts.net.size, simopts.net.size);
-qedir2 = zeros(simopts.net.size, simopts.net.size);
+qedir1     = zeros(simopts.net.size, simopts.net.size);
+qedir2     = zeros(simopts.net.size, simopts.net.size);
 cross_mod1 = zeros(simopts.net.size, simopts.net.size);
 cross_mod2 = zeros(simopts.net.size, simopts.net.size);
 % init adaptive params
 alphat = zeros(1, simopts.net.maxepochs);
 sigmat = zeros(1, simopts.net.maxepochs);
 gammat = zeros(1, simopts.net.maxepochs);
-xit = zeros(1, simopts.net.maxepochs);
+xit    = zeros(1, simopts.net.maxepochs);
 kappat = zeros(1, simopts.net.maxepochs);
 % set up the initial values
 alphat(1) = simopts.net.alpha;
@@ -52,7 +52,7 @@ if(simopts.debug.visual==1)
     coln = simopts.net.size; % true for square matrix
     rown = simopts.net.size;
     figure; set(gcf, 'color', 'white');
-    plot(netin.trainv1(1, :),'.r'); hold on; plot(netin.trainv2(1, :), '.b');
+    plot(netin.trainv1(1, :),'r'); hold on; plot(netin.trainv2(1, :), 'b');
     legend('First input, p1', 'Second input, p2'); box off;
 end
 % main loop of the network
@@ -67,19 +67,13 @@ while(1)
                 % -------------------------------------------------------------------------------
                 % compute the learning rate @ current epoch
                 alphat(net_iter) = alphat(1);
-                
-                % -------------------------------------------------------------------------------
                 % adapt the cross-modal interaction params (increase in time)
                 gammat(net_iter) = gammat(1);
-                
-                % -------------------------------------------------------------------------------
                 % inhibitory component for co-activation
                 xit(net_iter) = xit(1);
-                
-                % -------------------------------------------------------------------------------
                 % Hebbian learning rate
                 kappat(net_iter) = kappat(1);
-                
+                % -------------------------------------------------------------------------------                
             case 'adaptive'
                 
                 % use the same learning parameters for both SOM
@@ -93,50 +87,21 @@ while(1)
                 
                 % -------------------------------------------------------------------------------
                 % compute the learning rate @ current epoch
-                
                 % exponential learning rate adaptation
                 alphat(net_iter) = simopts.net.alpha*exp(-net_iter/tau);
-                
-                % linear learing rate adaptation
-                % alphat(net_iter) = alphat(net_iter-1) * 0.99;
-                
                 % semi-empirical learning rate adaptation - inverse
                 % time adaptation
                 % A = simopts.net.maxepochs/100.0; B = A;
                 % alphat(net_iter) = A/(net_iter + B);
-                
                 % -------------------------------------------------------------------------------
                 % adapt the cross-modal interaction params (increase in time)
                 
                 % cross-modal activation impact on local som learning
                 gammat(net_iter) = simopts.net.gamma*exp(net_iter/tau);
-                
-                % linear cross-modal impact factor on learning
-                % gammat(net_iter) = gammat(net_iter-1)*1.01;
-                % if(gammat(net_iter)>1)
-                %      gammat(net_iter) = 1;
-                % end
-                
-                % -------------------------------------------------------------------------------
                 % inhibitory component to ensure only co-activation
                 xit(net_iter) = simopts.net.xi*exp(net_iter/tau);
-                
-                % linear inhibitory component weight for co-activation
-                % in map weights update
-                % xit(net_iter) = xit(net_iter - 1)*1.015;
-                % if(xit(net_iter)>0.07)
-                %     xit(net_iter) = 0.07;
-                % end
-                
-                % -------------------------------------------------------------------------------
                 % Hebbian learning rate
                 kappat(net_iter) = simopts.net.kappa*exp(net_iter/tau);
-                
-                % linear Hebbian learning rate update
-                % kappat(net_iter) = kappat(net_iter)*1.01;
-                % if(kappat(net_iter)>0.3)
-                %     kappat(net_iter) = 0.3;
-                % end
                 
                 %----------------------------------------------------------------------------------------------------------
         end % end switch adaptive process parameteres type selection
@@ -144,10 +109,6 @@ while(1)
         % ---------------------------------------------------------------------------------------------------------
         % compute the neighborhood radius size @ current epoch
         sigmat(net_iter) = simopts.net.sigma*exp(-net_iter/simopts.net.lambda);
-        
-        % power-law neighborhood radius size adaptation
-        % sigmat(net_iter) = sigmat(net_iter-1)^(-net_iter/tau);
-        
         %----------------------------------------------------------------------------------------------------------
         
         % present a vector from each training data set to the network's
@@ -538,8 +499,8 @@ while(1)
     end
 end
 % save everything to a file and return the name
-file_dump = sprintf('%d_epochs_%d_neurons_%s_source_data_%s_trainvsize_%d_trainvnum_%d_params_%s',...
-            simopts.net.maxepochs, simopts.net.size,simopts.data.corrtype, simopts.data.source, simopts.data.trainvsize,...
+file_dump = sprintf('%d_epochs_%d_neurons_%s_source_data_%s_correlation_%d_trainvsize_%d_trainvnum_%d_params',...
+            simopts.net.maxepochs, simopts.net.size, simopts.data.source, simopts.data.corrtype, simopts.data.trainvsize,...
             simopts.data.ntrainv, simopts.net.params);
 save(file_dump);
 rundata = load(file_dump);

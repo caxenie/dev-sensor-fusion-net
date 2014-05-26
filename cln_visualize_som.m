@@ -29,11 +29,11 @@ for idx = 1:visin.simopts.net.size
 end
 subplot(1,2,1); 
 surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); 
-axis xy; csize([0.0, 1.0]);
+axis xy; caxis([0.0, 1.0]);
 xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 subplot(1,2,2); 
 imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); 
-colormap; colorbar; csize([0.0, 1.0]);
+colormap; colorbar; caxis([0.0, 1.0]);
 fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title); 
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 %----------------------------------------------------------------
@@ -48,11 +48,11 @@ for idx = 1:visin.simopts.net.size
     end
 end
 subplot(1,2,1); 
-surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); csize([0.0, 1.0]);
+surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); caxis([0.0, 1.0]);
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 subplot(1,2,2); 
 imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); 
-colormap; colorbar; axis xy; csize([0.0, 1.0]);
+colormap; colorbar; axis xy; caxis([0.0, 1.0]);
 fig_title = sprintf('Sensory elicited act. in network %s', curr_somid); suptitle(fig_title); 
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 %----------------------------------------------------------------
@@ -67,7 +67,7 @@ for idx = 1:visin.simopts.net.size
     end
 end
 subplot(1,2,1); 
-surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); csize([0.0, 1.0]);
+surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); caxis([0.0, 1.0]);
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 subplot(1,2,2); 
 imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy; 
@@ -92,7 +92,7 @@ for sidx = 1:rown*coln
     end
 end
 fig_title = sprintf('Sensory projections synaptic weights in network %s', curr_somid);suptitle(fig_title);
-
+%----------------------------------------------------------------
 % synaptic connections strenghts from cross modal Hebbian interaction (H weight matrix)
 figure;
 set(gcf, 'color', 'white'); box off; grid off;

@@ -18,7 +18,7 @@ function netin = cln_sensory_dataset_setup(opts)
 switch (opts.data.source)
     case 'sensors'
         % noise params (standard deviation)
-        minv = 0; maxv = 0.45; % sigma = 0.25
+        minv = 0; maxv = 0.35; 
         % specific params for sensor data
         infile     = 'robot_data_jras_paper';                   % robot dataset
         data_scaling    = -0.0572957795130823;                  % data dependent scaling
@@ -29,9 +29,9 @@ switch (opts.data.source)
         p1 = sensory_data(:, 7)*data_scaling;                   % generate the first variable (sample rate of change data from gyro)
     case 'generated'
         % noise params (standard deviation)
-        minv = 0; maxv = 0.25; % sigma = 0.25
+        minv = 0; maxv = 0.005; 
         % specific params for artificial data
-        num_samples = 5000;                                     % number of samples in the full dataset (similar to sensors)
+        num_samples = opts.data.numsamples;                     % number of samples in the full dataset (similar to sensors)
         data_freq_samp = 25;                                    % artificial data sampling freq
         time_units = (1:num_samples)/data_freq_samp;            % time units for display
         encoded_val = 3.0;                                      % sample value encoded in the data
@@ -135,7 +135,7 @@ switch(opts.data.trainvtype)
     case 'sliding'
         % second we can use a sliding window with a size of trainvsize
         % samples and a time delay of tau_slide
-        tau_slide = 1; % CAREFUL! tau_slide < opts.data.trainvsize
+        tau_slide = opts.data.slidesize; % CAREFUL! tau_slide < opts.data.trainvsize
         % data to be buffered are p1 and p2
         % trainvsize sample window size with an overlap of tau_slide samples
         training_set_p1 = buffer(p1, opts.data.trainvsize, tau_slide)';

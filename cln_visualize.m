@@ -19,11 +19,11 @@ function cln_visualize(visin)
 %----------------------------------------------------------------
 figure; 
 set(gcf, 'color', 'white');
-subplot(2, 1, 1); plot(visin.netin.raw1, '.b'); 
+subplot(2, 1, 1); plot(visin.netin.raw1, 'b'); 
 box off; grid off;
 ylabel('Input var P1'); xlabel('Samples');
 subplot(2, 1, 2);
-plot(visin.netin.raw2, '.g'); 
+plot(visin.netin.raw2, 'g'); 
 box off; grid off;
 ylabel('Input var P2'); xlabel('Samples');
 %----------------------------------------------------------------
@@ -47,28 +47,28 @@ ylabel('Neighborhood radius');xlabel('Samples');
 figure; 
 set(gcf, 'color', 'white'); 
 box off; grid off;
-start_show_idx = 5; 
-samples_show_num = visin.simopts.data.trainvsize;
+samples_show_num = 5;
 switch visin.simopts.data.trainvtype
     case 'full'
-        plot(visin.netin.raw1, '.b'); hold on; 
-        plot(visin.netin.raw2, '.g'); 
+        plot(visin.netin.raw1, 'b'); hold on; 
+        plot(visin.netin.raw2, 'g'); 
         box off; grid off;
     case 'interval'
+        start_show_idx = 5; 
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); 
             set(gcf, 'color', 'white'); 
             box off; grid off;
-            plot(visin.netin.trainv1(start_show_idx+idx, :), 'r'); hold on;
-            plot(visin.netin.trainv2(start_show_idx+idx, :), 'b');
+            plot(visin.netin.trainv1(start_show_idx + idx, :), 'r'); hold on;
+            plot(visin.netin.trainv2(start_show_idx + idx, :), 'b');
         end
     case 'sliding'
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); 
             set(gcf, 'color', 'white'); 
             box off; grid off;
-            plot(visin.netin.trainv1, 'r'); hold on;
-            plot(visin.netin.trainv2, 'b');
+            plot(visin.netin.trainv1(idx, :), 'r'); hold on;
+            plot(visin.netin.trainv2(idx, :), 'b');
         end
 end
 suptitle('Sample training vectors for input p1 vs p2');
