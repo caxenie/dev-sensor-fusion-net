@@ -18,7 +18,7 @@ function netin = cln_sensory_dataset_setup(opts)
 switch (opts.data.source)
     case 'sensors'
         % noise params (standard deviation)
-        minv = 0; maxv = 0.35; 
+        minv = 0; maxv = 2;
         % specific params for sensor data
         infile     = 'robot_data_jras_paper';                   % robot dataset
         data_scaling    = -0.0572957795130823;                  % data dependent scaling
@@ -29,7 +29,7 @@ switch (opts.data.source)
         p1 = sensory_data(:, 7)*data_scaling;                   % generate the first variable (sample rate of change data from gyro)
     case 'generated'
         % noise params (standard deviation)
-        minv = 0; maxv = 0.005; 
+        minv = 1; maxv = 0.01;
         % specific params for artificial data
         num_samples = opts.data.numsamples;                     % number of samples in the full dataset (similar to sensors)
         data_freq_samp = 25;                                    % artificial data sampling freq
@@ -64,20 +64,28 @@ switch (opts.data.source)
                     additive_noise = minv + (maxv-minv)*rand;
                     p2(idx) = p2(idx) + additive_noise;
                 end
-        end   
+        end
 end
 % create the second variable depending on the correlation type
 switch(opts.data.corrtype)
     case 'algebraic'
-        % simple algebraic correlation
-        p2 = p1.*3;
-        % add some noise over the signals
-        for idx=1:num_samples
-            additive_noise = minv + (maxv-minv)*rand;
-            p1(idx) = p1(idx) + additive_noise;
-            additive_noise = minv + (maxv-minv)*rand;
-            p2(idx) = p2(idx) + additive_noise;
+%         % simple algebraic correlation
+%         p2 = p1.*3;
+%         % add some noise over the signals
+%         for idx=1:num_samples
+%             additive_noise = minv + (maxv-minv)*rand;
+%             p1(idx) = p1(idx) + additive_noise;
+%             additive_noise = minv + (maxv-minv)*rand;
+%             p2(idx) = p2(idx) + additive_noise;
+%         end
+        % TEST
+        p1 = zeros(1, num_samples);
+        for idx = 1:num_samples
+            minv = 1; maxv = 3; additive_noise = minv + (maxv-minv)*rand;
+            p1(idx) = 4.0 + additive_noise;
         end
+        % second variable
+        p2 = p1.*3;
     case 'temporal'
         % temporal integration
         p2 = zeros(1, length(p1)); p2(1) = p1(1);
