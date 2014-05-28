@@ -8,7 +8,7 @@
 clear all; close all; clc; pause(2);
 %% LOAD DATA AND SETUP RUNTIME
 % -------------- simulation options parametrization ---------------------
-simopts.mode            = 'run';                      % mode given the function of the script, i.e. run, analyze
+simopts.mode            = 'analyze';                      % mode given the function of the script, i.e. run, analyze
 simopts.debug.verbose   = 0;                          % flag to activate / inactivate debug verbose
 simopts.debug.visual    = 0;                          % flag to activate / inactivate debug visualization
 % ---------- data generation and preprocessing parametrization ----------

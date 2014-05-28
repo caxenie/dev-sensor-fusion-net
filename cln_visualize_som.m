@@ -80,16 +80,34 @@ set(gcf, 'color', 'white'); box off; grid off;
 % present each neurons receptive field (mean input sequence that triggers that neuron - weight vector)
 coln = visin.simopts.net.sizey; % true for square matrix
 rown = visin.simopts.net.sizex;
+mean_qe = zeros(1, visin.simopts.data.trainvsize);
+stdev = zeros(1, visin.simopts.data.trainvsize);
 for sidx = 1:rown*coln
     subplot(rown, coln, sidx);
     [ridx, cidx] = ind2sub([coln, rown], sidx);
-    plot(som(cidx, ridx).W); box off; hold on; %axis([1 length(visin.netin.trainv2) min(min([som.W])) max(max([som.W]))]);
     switch curr_somid
         case '1'
-            plot(visin.netin.trainv1(end,:), 'r');
+            % compute the mean quantization error between all input vectors
+            % from the training dataset and the current neuron receptive
+            % field (prefered value)
+            for indx = 1:visin.simopts.data.trainvsize
+                mean_qe(indx) = mean(visin.netin.trainv1(:, indx) - som(cidx, ridx).W(indx));
+                stdev(indx) = std(visin.netin.trainv1(:, indx) - som(cidx, ridx).W(indx));
+            end
         case '2'
-            plot(visin.netin.trainv2(end,:), 'm');
+            for indx = 1:visin.simopts.data.trainvsize
+                mean_qe(indx) = mean(visin.netin.trainv2(:, indx) - som(cidx, ridx).W(indx));
+                stdev(indx) = std(visin.netin.trainv2(:, indx) - som(cidx, ridx).W(indx));
+            end
     end
+    % plot the quantization error (+/- standard deviation) overlayed on the preferred value of each
+    % neuron after training
+    sample_index = 1:visin.simopts.data.trainvsize;
+    plus_sd = [sample_index, fliplr(sample_index)];
+    minus_sd = [som(cidx, ridx).W + stdev, fliplr(som(cidx, ridx).W-stdev)];
+    fill(plus_sd, minus_sd, 'y'); hold on; box off;     
+    % overlay weitght vector for current neuron
+    plot(som(cidx, ridx).W);
 end
 fig_title = sprintf('Sensory projections synaptic weights in network %s', curr_somid);suptitle(fig_title);
 %----------------------------------------------------------------
