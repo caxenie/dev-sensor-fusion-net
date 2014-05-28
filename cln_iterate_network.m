@@ -21,10 +21,10 @@ function rundata = cln_iterate_network(simopts, netin, som1, som2)
 % network iterator
 net_iter = 1;
 % quantization error for each map and intermap
-qedir1     = zeros(simopts.net.size, simopts.net.size);
-qedir2     = zeros(simopts.net.size, simopts.net.size);
-cross_mod1 = zeros(simopts.net.size, simopts.net.size);
-cross_mod2 = zeros(simopts.net.size, simopts.net.size);
+qedir1     = zeros(simopts.net.sizex, simopts.net.sizey);
+qedir2     = zeros(simopts.net.sizex, simopts.net.sizey);
+cross_mod1 = zeros(simopts.net.sizex, simopts.net.sizey);
+cross_mod2 = zeros(simopts.net.sizex, simopts.net.sizey);
 % init adaptive params
 alphat = zeros(1, simopts.net.maxepochs);
 sigmat = zeros(1, simopts.net.maxepochs);
@@ -41,16 +41,16 @@ tau = 500;
 if(simopts.debug.visual==1)
     % epoch wise visualization of network activities(direct, indirect and total)
     act_vis = figure; set(gcf, 'color', 'white'); box off;
-    visual_somd1 = zeros(simopts.net.size, simopts.net.size);
-    visual_somd2 = zeros(simopts.net.size, simopts.net.size);
-    visual_somi1 = zeros(simopts.net.size, simopts.net.size);
-    visual_somi2 = zeros(simopts.net.size, simopts.net.size);
-    visual_somt1 = zeros(simopts.net.size, simopts.net.size);
-    visual_somt2 = zeros(simopts.net.size, simopts.net.size);
+    visual_somd1 = zeros(simopts.net.sizex, simopts.net.sizey);
+    visual_somd2 = zeros(simopts.net.sizex, simopts.net.sizey);
+    visual_somi1 = zeros(simopts.net.sizex, simopts.net.sizey);
+    visual_somi2 = zeros(simopts.net.sizex, simopts.net.sizey);
+    visual_somt1 = zeros(simopts.net.sizex, simopts.net.sizey);
+    visual_somt2 = zeros(simopts.net.sizex, simopts.net.sizey);
     hweight_vis1 = figure; set(gcf, 'color', 'white'); box off;
     hweight_vis2 = figure; set(gcf, 'color', 'white'); box off;
-    coln = simopts.net.size; % true for square matrix
-    rown = simopts.net.size;
+    coln = simopts.net.sizey; % true for square matrix
+    rown = simopts.net.sizex;
     figure; set(gcf, 'color', 'white');
     plot(netin.trainv1(1, :),'r'); hold on; plot(netin.trainv2(1, :), 'b');
     legend('First input, p1', 'Second input, p2'); box off;
@@ -73,7 +73,7 @@ while(1)
                 xit(net_iter) = xit(1);
                 % Hebbian learning rate
                 kappat(net_iter) = kappat(1);
-                % -------------------------------------------------------------------------------                
+                % -------------------------------------------------------------------------------
             case 'adaptive'
                 
                 % use the same learning parameters for both SOM
@@ -118,8 +118,8 @@ while(1)
             % max quantization error init
             qe_max1_dir = Inf; qe_max2_dir = Inf;
             % go through the two SOMs
-            for idx = 1:simopts.net.size
-                for jdx = 1:simopts.net.size
+            for idx = 1:simopts.net.sizex
+                for jdx = 1:simopts.net.sizey
                     % compute quantization errors in each som map for
                     % afferent projections from the sensors
                     qedir1(idx, jdx) = norm(netin.trainv1(trainv_idx, :) - som1(idx, jdx).W);
@@ -155,9 +155,24 @@ while(1)
                 fprintf(1, 'QE_MAT:\n'); qedir2
             end
             
+            % check if the cross-modal activation is enabled
+            % if it is disabled all the hebbian weights are 0
+            if(strcmp(simopts.net.xmodlearn, 'none')==1)
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
+                        for kidx = 1:simopts.net.sizex
+                            for tidx = 1:simopts.net.sizey
+                                som1(idx, jdx).H(kidx, tidx)  = 0.0;
+                                som2(idx, jdx).H(kidx, tidx)  = 0.0;
+                            end
+                        end
+                    end
+                end
+            end
+            
             % compute the activations for each neuron in each som
-            for idx = 1:simopts.net.size
-                for jdx = 1:simopts.net.size
+            for idx = 1:simopts.net.sizex
+                for jdx = 1:simopts.net.sizey
                     %----------------------------------------------------------------------------------------------------------
                     
                     % compute the direct activation - neighborhood kernel
@@ -180,16 +195,16 @@ while(1)
                 fprintf(1, 'SOM2.ad = \n'); [som2.ad]
             end
             
-            for idx = 1:simopts.net.size
-                for jdx = 1:simopts.net.size
+            for idx = 1:simopts.net.sizex
+                for jdx = 1:simopts.net.sizey
                     % ---------------------------------------------------------------------------------------------------------
                     % compute the indirect activation
                     
                     % from all other units in SOM2
-                    for isom1 = 1:simopts.net.size
-                        for jsom1 = 1:simopts.net.size
-                            for isom2 = 1:simopts.net.size
-                                for jsom2 = 1:simopts.net.size
+                    for isom1 = 1:simopts.net.sizex
+                        for jsom1 = 1:simopts.net.sizey
+                            for isom2 = 1:simopts.net.sizex
+                                for jsom2 = 1:simopts.net.sizey
                                     % sum of all products between direct activation
                                     % and cross-som Hebbian weights
                                     cross_mod2(isom1, jsom1) = cross_mod2(isom1, jsom1) + ...
@@ -204,10 +219,10 @@ while(1)
                     som1(idx, jdx).ai = exp(-(norm([bmuind1.xpos - idx, bmuind1.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
                     
                     % from all other units in SOM1
-                    for isom2 = 1:simopts.net.size
-                        for jsom2 = 1:simopts.net.size
-                            for isom1 = 1:simopts.net.size
-                                for jsom1 = 1:simopts.net.size
+                    for isom2 = 1:simopts.net.sizex
+                        for jsom2 = 1:simopts.net.sizey
+                            for isom1 = 1:simopts.net.sizex
+                                for jsom1 = 1:simopts.net.sizey
                                     % sum of all products between direct activation
                                     % and cross-som Hebbian weights
                                     cross_mod1(isom2, jsom2) = cross_mod1(isom2, jsom2) + ...
@@ -262,37 +277,37 @@ while(1)
                 % direct activities for the 2 som
                 % som1
                 subplot(3,2,1);
-                for idx = 1:simopts.net.size
-                    for jdx = 1:simopts.net.size
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
                         visual_somd1(idx, jdx) = som1(idx, jdx).ad;
                     end
                 end
-                imagesc(visual_somd1(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar; axis xy; pause(vis_time_delay);
+                imagesc(visual_somd1(1:simopts.net.sizex, 1:simopts.net.sizey)); colormap; colorbar; axis xy; pause(vis_time_delay);
                 title('SOM1 Direct activation');
                 % som2
                 subplot(3,2,2);
-                for idx = 1:simopts.net.size
-                    for jdx = 1:simopts.net.size
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
                         visual_somd2(idx, jdx) = som2(idx, jdx).ad;
                     end
                 end
-                imagesc(visual_somd2(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar;  axis xy; pause(vis_time_delay);
+                imagesc(visual_somd2(1:simopts.net.sizex, 1:simopts.net.sizey)); colormap; colorbar;  axis xy; pause(vis_time_delay);
                 title('SOM2 Direct activation');
                 % --------------------------------------------------------------------------------------
                 % indirect activities for the 2 som
                 subplot(3,2,3);
                 % som1
-                for idx = 1:simopts.net.size
-                    for jdx = 1:simopts.net.size
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
                         visual_somi1(idx, jdx) = som1(idx, jdx).ai;
                     end
                 end
-                imagesc(visual_somi1(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar;  axis xy; pause(vis_time_delay);
+                imagesc(visual_somi1(1:simopts.net.sizex, 1:simopts.net.sizey)); colormap; colorbar;  axis xy; pause(vis_time_delay);
                 title('SOM1 Indirect activation');
                 subplot(3,2,4);
                 % som2
-                for idx = 1:simopts.net.size
-                    for jdx = 1:simopts.net.size
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
                         visual_somi2(idx, jdx) = som2(idx, jdx).ai;
                     end
                 end
@@ -302,29 +317,29 @@ while(1)
                 % total activities for the 2 som
                 subplot(3,2,5);
                 % som1
-                for idx = 1:simopts.net.size
-                    for jdx = 1:simopts.net.size
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
                         visual_somt1(idx, jdx) = som1(idx, jdx).at;
                     end
                 end
-                imagesc(visual_somt1(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar;  axis xy; pause(vis_time_delay);
+                imagesc(visual_somt1(1:simopts.net.sizex, 1:simopts.net.sizey)); colormap; colorbar;  axis xy; pause(vis_time_delay);
                 title('SOM1 Total activation');
                 subplot(3,2,6);
                 % som2
-                for idx = 1:simopts.net.size
-                    for jdx = 1:simopts.net.size
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
                         visual_somt2(idx, jdx) = som2(idx, jdx).at;
                     end
                 end
-                imagesc(visual_somt2(1:simopts.net.size, 1:simopts.net.size)); colormap; colorbar;  axis xy; pause(vis_time_delay);
+                imagesc(visual_somt2(1:simopts.net.sizex, 1:simopts.net.sizey)); colormap; colorbar;  axis xy; pause(vis_time_delay);
                 title('SOM2 Total activation'); pause(vis_time_delay);
                 suptit = sprintf('Activities in the 2 som networks - %d Epochs', net_iter);
                 suptitle(suptit);
                 % --------------------------------------------------------------------------------------
             end % env verbose and visualization
             
-            for idx = 1:simopts.net.size
-                for jdx = 1:simopts.net.size
+            for idx = 1:simopts.net.sizex
+                for jdx = 1:simopts.net.sizey
                     % ---------------------------------------------------------------------------------------------------------
                     
                     % update weights for the current neuron in the BMU
@@ -367,130 +382,132 @@ while(1)
                 end
             end
             
-            for idx = 1:simopts.net.size
-                for jdx = 1:simopts.net.size
-                    % ---------------------------------------------------------------------------------------------------------
-                    % cross-modal Hebbian links update for co-activated
-                    % neurons in both SOMs
-                    
-                    % update for SOM1
-                    for isom2 = 1:simopts.net.size
-                        for jsom2 = 1:simopts.net.size
-                            switch simopts.net.xmodlearn
-                                case 'hebb'
-                                    % compute new weight using Hebbian rule
-                                    % deltaH = K*preH*postH
-                                    som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*som1(idx, jdx).at*som2(isom2, jsom2).at;
-                                case 'covariance'
-                                    % compute new weight using covariance learning (pseudo-Hebbian) rule
-                                    % deltaH = K*(preH - mean(preH))*
-                                    %            (postH - mean(postH));
-                                    som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*(som1(idx, jdx).at - mean([som1.at]))*(som2(isom2, jsom2).at - mean([som2.at]));
+            % check if we enabled the cross-modal interaction, if yes check
+            % what learnign rule we are currently using in the network
+            if(strcmp(simopts.net.xmodlearn, 'none')==0)
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
+                        % ---------------------------------------------------------------------------------------------------------
+                        % cross-modal Hebbian links update for co-activated
+                        % neurons in both SOMs
+                        
+                        % update for SOM1
+                        for isom2 = 1:simopts.net.sizex
+                            for jsom2 = 1:simopts.net.sizey
+                                switch simopts.net.xmodlearn
+                                    case 'hebb'
+                                        % compute new weight using Hebbian rule
+                                        % deltaH = K*preH*postH
+                                        som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*som1(idx, jdx).at*som2(isom2, jsom2).at;
+                                    case 'covariance'
+                                        % compute new weight using covariance learning (pseudo-Hebbian) rule
+                                        % deltaH = K*(preH - mean(preH))*
+                                        %            (postH - mean(postH));
+                                        som1(idx, jdx).H(isom2, jsom2)= som1(idx, jdx).H(isom2, jsom2) + kappat(net_iter)*(som1(idx, jdx).at - mean([som1.at]))*(som2(isom2, jsom2).at - mean([som2.at]));
+                                end
                             end
                         end
-                    end
-                    
-                    % check if verbose is on for debugging
-                    if(simopts.debug.verbose == 1)
-                        % first som
-                        fprintf(1, 'SOM1_RAW(%d,%d).H= \n', idx, jdx); som1(idx, jdx).H
-                    end
-                    
-                    % update for SOM2
-                    for isom1 = 1:simopts.net.size
-                        for jsom1 = 1:simopts.net.size
-                            
-                            switch simopts.net.xmodlearn
-                                case 'hebb'
-                                    % compute new weight using Hebbian rule
-                                    % deltaH = K*preH*postH
-                                    som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*som2(idx, jdx).at*som1(isom1, jsom1).at;
-                                case 'covariance'
-                                    % compute new weight using covariance learning (pseudo-Hebbian) rule
-                                    % deltaH = K*(preH - mean(preH))*
-                                    %            (postH - mean(postH));
-                                    som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*(som2(idx, jdx).at - mean([som2.at]))*(som1(isom1, jsom1).at - mean([som1.at]));
+                        
+                        % check if verbose is on for debugging
+                        if(simopts.debug.verbose == 1)
+                            % first som
+                            fprintf(1, 'SOM1_RAW(%d,%d).H= \n', idx, jdx); som1(idx, jdx).H
+                        end
+                        
+                        % update for SOM2
+                        for isom1 = 1:simopts.net.sizex
+                            for jsom1 = 1:simopts.net.sizey
+                                
+                                switch simopts.net.xmodlearn
+                                    case 'hebb'
+                                        % compute new weight using Hebbian rule
+                                        % deltaH = K*preH*postH
+                                        som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*som2(idx, jdx).at*som1(isom1, jsom1).at;
+                                    case 'covariance'
+                                        % compute new weight using covariance learning (pseudo-Hebbian) rule
+                                        % deltaH = K*(preH - mean(preH))*
+                                        %            (postH - mean(postH));
+                                        som2(idx, jdx).H(isom1, jsom1)= som2(idx, jdx).H(isom1, jsom1) + kappat(net_iter)*(som2(idx, jdx).at - mean([som2.at]))*(som1(isom1, jsom1).at - mean([som1.at]));
+                                end
                             end
                         end
-                    end
-                    
-                    % check if verbose is on for debugging
-                    if(simopts.debug.verbose == 1)
-                        % second som
-                        fprintf(1, 'SOM2_RAW(%d,%d).H= \n', idx, jdx); som2(idx, jdx).H
-                    end
-                end
-            end
-            
-            % cross-modal Hebbian links normalization and update
-            for idx = 1:simopts.net.size
-                for jdx = 1:simopts.net.size
-                    
-                    for isom2 = 1:simopts.net.size
-                        for jsom2 = 1:simopts.net.size
-                            % normalize weights
-                            som1(idx, jdx).H(isom2, jsom2) = (som1(idx, jdx).H(isom2, jsom2) - min(min([som1.H])))/(max(max([som1.H])) - min(min([som1.H])));
+                        
+                        % check if verbose is on for debugging
+                        if(simopts.debug.verbose == 1)
+                            % second som
+                            fprintf(1, 'SOM2_RAW(%d,%d).H= \n', idx, jdx); som2(idx, jdx).H
                         end
                     end
-                    
-                    % check if verbose is on for debugging
-                    if(simopts.debug.verbose == 1)
-                        % first som
-                        fprintf(1, 'SOM1_NORM(%d,%d).H= \n', idx, jdx); som1(idx, jdx).H
-                        fprintf(1, 'SOM1.H = \n'); som1.H
-                    end
-                    
-                    for isom1 = 1:simopts.net.size
-                        for jsom1 = 1:simopts.net.size
-                            % normalize weights
-                            som2(idx, jdx).H(isom1, jsom1) = (som2(idx, jdx).H(isom1, jsom1) - min(min([som2.H])))/(max(max([som2.H])) - min(min([som2.H])));
+                end
+                
+                % cross-modal Hebbian links normalization and update
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
+                        
+                        for isom2 = 1:simopts.net.sizex
+                            for jsom2 = 1:simopts.net.sizey
+                                % normalize weights
+                                som1(idx, jdx).H(isom2, jsom2) = (som1(idx, jdx).H(isom2, jsom2) - min(min([som1.H])))/(max(max([som1.H])) - min(min([som1.H])));
+                            end
+                        end
+                        
+                        % check if verbose is on for debugging
+                        if(simopts.debug.verbose == 1)
+                            % first som
+                            fprintf(1, 'SOM1_NORM(%d,%d).H= \n', idx, jdx); som1(idx, jdx).H
+                            fprintf(1, 'SOM1.H = \n'); som1.H
+                        end
+                        
+                        for isom1 = 1:simopts.net.sizex
+                            for jsom1 = 1:simopts.net.sizey
+                                % normalize weights
+                                som2(idx, jdx).H(isom1, jsom1) = (som2(idx, jdx).H(isom1, jsom1) - min(min([som2.H])))/(max(max([som2.H])) - min(min([som2.H])));
+                            end
+                        end
+                        
+                        % check if verbose is on for debugging
+                        if(simopts.debug.verbose == 1)
+                            % second som
+                            fprintf(1, 'SOM2_NORM(%d,%d).H= \n', idx, jdx); som2(idx, jdx).H
+                            fprintf(1, 'SOM2.H = \n'); som2.H
                         end
                     end
-                    
-                    % check if verbose is on for debugging
-                    if(simopts.debug.verbose == 1)
-                        % second som
-                        fprintf(1, 'SOM2_NORM(%d,%d).H= \n', idx, jdx); som2(idx, jdx).H
-                        fprintf(1, 'SOM2.H = \n'); som2.H
+                end
+                
+                % check if debug visualization is on
+                if(simopts.debug.visual == 1)
+                    % epoch wise visualization of hebbian cross-modal
+                    % weight matrices for som1
+                    figure(hweight_vis1);
+                    % --------------------------------------------------------------------------------------
+                    for sidx = 1:rown*coln
+                        subplot(rown, coln, sidx);
+                        [ridx, cidx] = ind2sub([coln, rown], sidx);
+                        % plot the weights for current neuron
+                        imagesc(som1(cidx, ridx).H(1:simopts.net.sizex, 1:simopts.net.sizey)); hold on;
+                        %if(ridx == simopts.net.size)
+                        colorbar;
+                        %end
+                        axis xy; colormap; box off;
                     end
-                end
-            end
+                    suptit1 = sprintf('Cross-modal weights of SOM1 - %d Epochs', net_iter);
+                    suptitle(suptit1);
+                    % weight matrices for som2
+                    figure(hweight_vis2);
+                    % --------------------------------------------------------------------------------------
+                    for sidx = 1:rown*coln
+                        subplot(rown, coln, sidx);
+                        [ridx, cidx] = ind2sub([coln, rown], sidx);
+                        % plot the weights for current neuron
+                        imagesc(som2(cidx, ridx).H(1:simopts.net.sizex, 1:simopts.net.sizey)); hold on;
+                        colorbar;axis xy; colormap; box off;
+                    end
+                    suptit2 = sprintf('Cross-modal weights of SOM2 - %d Epochs', net_iter);
+                    suptitle(suptit2);
+                    % --------------------------------------------------------------------------------------
+                end % env debug visualization
+            end % end of check for cross-modal interaction
             
-            % check if debug visualization is on
-            if(simopts.debug.visual == 1)
-                % epoch wise visualization of hebbian cross-modal
-                % weight matrices for som1
-                figure(hweight_vis1);
-                % --------------------------------------------------------------------------------------
-                for sidx = 1:rown*coln
-                    subplot(rown, coln, sidx);
-                    [ridx, cidx] = ind2sub([coln, rown], sidx);
-                    % plot the weights for current neuron
-                    imagesc(som1(cidx, ridx).H(1:simopts.net.size, 1:simopts.net.size)); hold on;
-                    %if(ridx == simopts.net.size)
-                    colorbar;
-                    %end
-                    axis xy; colormap; box off;
-                end
-                suptit1 = sprintf('Cross-modal weights of SOM1 - %d Epochs', net_iter);
-                suptitle(suptit1);
-                % weight matrices for som2
-                figure(hweight_vis2);
-                % --------------------------------------------------------------------------------------
-                for sidx = 1:rown*coln
-                    subplot(rown, coln, sidx);
-                    [ridx, cidx] = ind2sub([coln, rown], sidx);
-                    % plot the weights for current neuron
-                    imagesc(som2(cidx, ridx).H(1:simopts.net.size, 1:simopts.net.size)); hold on;
-                    %if(ridx == simopts.net.size)
-                    colorbar;
-                    %end
-                    axis xy; colormap; box off;
-                end
-                suptit2 = sprintf('Cross-modal weights of SOM2 - %d Epochs', net_iter);
-                suptitle(suptit2);
-                % --------------------------------------------------------------------------------------
-            end % env debug visualization
         end % end for each entry in the training vector
         net_iter = net_iter + 1;
     else
@@ -499,9 +516,9 @@ while(1)
     end
 end
 % save everything to a file and return the name
-file_dump = sprintf('%d_epochs_%d_neurons_%s_source_data_%s_correlation_%d_trainvsize_%d_trainvnum_%s_params',...
-            simopts.net.maxepochs, simopts.net.size, simopts.data.source, simopts.data.corrtype, simopts.data.trainvsize,...
-            simopts.data.ntrainv, simopts.net.params);
+file_dump = sprintf('%d_epochs_%d_x_%d_neurons_%s_source_data_%s_correlation_%d_trainvsize_%d_trainvnum_%s_params_%s_xmodlearn',...
+            simopts.net.maxepochs, simopts.net.sizex, simopts.net.sizey, simopts.data.source, simopts.data.corrtype, simopts.data.trainvsize,...
+            simopts.data.ntrainv, simopts.net.params, simopts.net.xmodlearn);
 save(file_dump);
 rundata = load(file_dump);
 end

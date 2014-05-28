@@ -21,18 +21,18 @@ somid = [som.id]; curr_somid = somid(end);
 % total activity in each neurons in the SOM
 figure; set(gcf, 'color', 'white'); box off; grid off;
 % visualization of direct activity
-visual_som = zeros(visin.simopts.net.size, visin.simopts.net.size);
-for idx = 1:visin.simopts.net.size
-    for jdx = 1:visin.simopts.net.size
+visual_som = zeros(visin.simopts.net.sizex, visin.simopts.net.sizey);
+for idx = 1:visin.simopts.net.sizex
+    for jdx = 1:visin.simopts.net.sizey
         visual_som(idx, jdx) = som(idx, jdx).at;
     end
 end
 subplot(1,2,1); 
-surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); 
+surf(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); 
 axis xy; caxis([0.0, 1.0]);
 xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 subplot(1,2,2); 
-imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); 
+imagesc(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); 
 colormap; colorbar; caxis([0.0, 1.0]);
 fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title); 
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
@@ -41,17 +41,17 @@ figure;
 set(gcf, 'color', 'white'); 
 box off; grid off;
 % visualization of direct activity
-visual_som = zeros(visin.simopts.net.size, visin.simopts.net.size);
-for idx = 1:visin.simopts.net.size
-    for jdx = 1:visin.simopts.net.size
+visual_som = zeros(visin.simopts.net.sizex, visin.simopts.net.sizey);
+for idx = 1:visin.simopts.net.sizex
+    for jdx = 1:visin.simopts.net.sizey
         visual_som(idx, jdx) = som(idx, jdx).ad;
     end
 end
 subplot(1,2,1); 
-surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); caxis([0.0, 1.0]);
+surf(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); caxis([0.0, 1.0]);
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 subplot(1,2,2); 
-imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); 
+imagesc(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); 
 colormap; colorbar; axis xy; caxis([0.0, 1.0]);
 fig_title = sprintf('Sensory elicited act. in network %s', curr_somid); suptitle(fig_title); 
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
@@ -60,17 +60,17 @@ axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
 % visualization of indirect activity (cross-modal elicited activity)
-visual_som = zeros(visin.simopts.net.size, visin.simopts.net.size);
-for idx = 1:visin.simopts.net.size
-    for jdx = 1:visin.simopts.net.size
+visual_som = zeros(visin.simopts.net.sizex, visin.simopts.net.sizey);
+for idx = 1:visin.simopts.net.sizex
+    for jdx = 1:visin.simopts.net.sizey
         visual_som(idx, jdx) = som(idx, jdx).ai;
     end
 end
 subplot(1,2,1); 
-surf(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); caxis([0.0, 1.0]);
+surf(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); caxis([0.0, 1.0]);
 axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 subplot(1,2,2); 
-imagesc(visual_som(1:visin.simopts.net.size, 1:visin.simopts.net.size)); colormap; colorbar; axis xy; 
+imagesc(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); colormap; colorbar; axis xy; 
 fig_title = sprintf('Cross-modal elicited act. in network %s', curr_somid);suptitle(fig_title);
 xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 %----------------------------------------------------------------
@@ -78,8 +78,8 @@ xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
 % present each neurons receptive field (mean input sequence that triggers that neuron - weight vector)
-coln = visin.simopts.net.size; % true for square matrix
-rown = visin.simopts.net.size;
+coln = visin.simopts.net.sizey; % true for square matrix
+rown = visin.simopts.net.sizex;
 for sidx = 1:rown*coln
     subplot(rown, coln, sidx);
     [ridx, cidx] = ind2sub([coln, rown], sidx);
@@ -96,13 +96,13 @@ fig_title = sprintf('Sensory projections synaptic weights in network %s', curr_s
 % synaptic connections strenghts from cross modal Hebbian interaction (H weight matrix)
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
-coln = visin.simopts.net.size; % true for square matrix
-rown = visin.simopts.net.size;
+coln = visin.simopts.net.sizey; % true for square matrix
+rown = visin.simopts.net.sizex;
 for sidx = 1:rown*coln
     subplot(rown, coln, sidx);
     [ridx, cidx] = ind2sub([coln, rown], sidx);
     % plot the weights for current neuron
-    imagesc(som(cidx, ridx).H(1:visin.simopts.net.size, 1:visin.simopts.net.size)); hold on; 
+    imagesc(som(cidx, ridx).H(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); hold on; 
     %if(ridx == visin.simopts.net.size) 
     colorbar; caxis([0.0 1.0]);
     %end

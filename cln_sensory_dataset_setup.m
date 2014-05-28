@@ -30,12 +30,16 @@ switch (opts.data.source)
     case 'generated'
         % noise params (standard deviation)
         minv = 1; maxv = 0.01;
+        % bounds for the input values in p1 and p2
+        minp = 1; maxp = 4;
         % specific params for artificial data
         num_samples = opts.data.numsamples;                     % number of samples in the full dataset (similar to sensors)
         data_freq_samp = 25;                                    % artificial data sampling freq
         time_units = (1:num_samples)/data_freq_samp;            % time units for display
-        encoded_val = 3.0;                                      % sample value encoded in the data
-        p1 = ones(1, num_samples)*encoded_val;                  % generate the first variable
+        p1 = zeros(1, num_samples);
+        for idx = 1:num_samples
+            p1(idx) = minp + (maxp - minp)*rand;                % generate the first variable
+        end
         switch(opts.data.corrtype)
             case 'delay'
                 % sine wave and a delayed one + noise
@@ -69,23 +73,15 @@ end
 % create the second variable depending on the correlation type
 switch(opts.data.corrtype)
     case 'algebraic'
-%         % simple algebraic correlation
-%         p2 = p1.*3;
-%         % add some noise over the signals
+        % simple algebraic correlation
+        p2 = p1.*3;
+        % add some noise over the signals
 %         for idx=1:num_samples
 %             additive_noise = minv + (maxv-minv)*rand;
 %             p1(idx) = p1(idx) + additive_noise;
 %             additive_noise = minv + (maxv-minv)*rand;
 %             p2(idx) = p2(idx) + additive_noise;
 %         end
-        % TEST
-        p1 = zeros(1, num_samples);
-        for idx = 1:num_samples
-            minv = 1; maxv = 3; additive_noise = minv + (maxv-minv)*rand;
-            p1(idx) = 4.0 + additive_noise;
-        end
-        % second variable
-        p2 = p1.*3;
     case 'temporal'
         % temporal integration
         p2 = zeros(1, length(p1)); p2(1) = p1(1);

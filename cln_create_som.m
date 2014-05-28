@@ -17,10 +17,10 @@
 
 function  net = cln_create_som(opt, din, idn)
 % create struct for SOM
-net(1:opt.net.size, 1:opt.net.size) = struct('xpos', 0,...
+net(1:opt.net.sizex, 1:opt.net.sizey) = struct('xpos', 0,...
     'ypos', 0,...
     'W'   , zeros(1, opt.data.trainvsize),...          % input weights
-    'H'   , zeros(opt.net.size, opt.net.size),...  % Hebbian weights for cross-SOM interaction
+    'H'   , zeros(opt.net.sizex, opt.net.sizey),...  % Hebbian weights for cross-SOM interaction
     'ad'  , 0.0, ... % direct activation elicited by input vector
     'ai'  , 0.0, ... % indirect activation elicited by cross-SOM interaction
     'at'  , 0.0, ... % total joint activation (direct + indirect)
@@ -32,19 +32,19 @@ net(1:opt.net.size, 1:opt.net.size) = struct('xpos', 0,...
 minin = min(din); maxin = max(din);
 
 % initialize SOM
-for idx = 1:opt.net.size
-    for jdx = 1:opt.net.size
+for idx = 1:opt.net.sizex
+    for jdx = 1:opt.net.sizey
         net(idx, jdx).xpos = idx;
         net(idx, jdx).ypos = jdx;
         for in_idx = 1:opt.data.trainvsize
             net(idx, jdx).W(in_idx) = minin + (maxin - minin)*rand;
         end
-        for kidx = 1:opt.net.size
-            for tidx = 1:opt.net.size
+        for kidx = 1:opt.net.sizex
+            for tidx = 1:opt.net.sizey
                 net(idx, jdx).H(kidx, tidx)  = rand;
             end
         end
     end
 end
-fprintf(1, 'cln_create_som: Created %s of size %d x %d\n', idn, opt.net.size, opt.net.size);
+fprintf(1, 'cln_create_som: Created %s of size %d x %d\n', idn, opt.net.sizex, opt.net.sizey);
 end
