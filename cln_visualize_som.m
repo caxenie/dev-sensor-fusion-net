@@ -27,18 +27,25 @@ for idx = 1:visin.simopts.net.sizex
         visual_som(idx, jdx) = som(idx, jdx).at;
     end
 end
-subplot(1,2,1); 
-surf(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); 
-axis xy; caxis([0.0, 1.0]);
-xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
-subplot(1,2,2); 
-imagesc(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); 
-colormap; colorbar; caxis([0.0, 1.0]);
-fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title); 
-axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+% if we have a 2D SOM use 3D display for activities
+if(visin.simopts.net.sizex~=1)
+    subplot(1,2,1);
+    surf(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey));
+    axis xy; caxis([0.0, 1.0]);
+    xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+    subplot(1,2,2);
+    imagesc(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey));
+    colormap; colorbar; caxis([0.0, 1.0]);
+    fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title);
+    axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+else
+    plot(1:visin.simopts.net.sizey, visual_som, 'k', 'LineWidth', 4);
+    fig_title = sprintf('Total (joint) activity in network %s', curr_somid); suptitle(fig_title);
+    axis xy; xlabel('Neuron index'); ylabel('Activity'); box off;
+end
 %----------------------------------------------------------------
 figure;
-set(gcf, 'color', 'white'); 
+set(gcf, 'color', 'white');
 box off; grid off;
 % visualization of direct activity
 visual_som = zeros(visin.simopts.net.sizex, visin.simopts.net.sizey);
@@ -47,14 +54,21 @@ for idx = 1:visin.simopts.net.sizex
         visual_som(idx, jdx) = som(idx, jdx).ad;
     end
 end
-subplot(1,2,1); 
-surf(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); caxis([0.0, 1.0]);
-axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
-subplot(1,2,2); 
-imagesc(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); 
-colormap; colorbar; axis xy; caxis([0.0, 1.0]);
-fig_title = sprintf('Sensory elicited act. in network %s', curr_somid); suptitle(fig_title); 
-axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+% if we have a 2D SOM use 3D display for activities
+if(visin.simopts.net.sizex~=1)
+    subplot(1,2,1);
+    surf(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); caxis([0.0, 1.0]);
+    axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+    subplot(1,2,2);
+    imagesc(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey));
+    colormap; colorbar; axis xy; caxis([0.0, 1.0]);
+    fig_title = sprintf('Sensory elicited act. in network %s', curr_somid); suptitle(fig_title);
+    axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+else
+    plot(1:visin.simopts.net.sizey, visual_som, 'k', 'LineWidth', 4);
+    fig_title = sprintf('Sensory elicited activity in network %s', curr_somid); suptitle(fig_title);
+    axis xy; xlabel('Neuron index'); ylabel('Activity'); box off;
+end
 %----------------------------------------------------------------
 % indirect activity elicited by cross-modal Hebbian linkage (plastic connections)
 figure;
@@ -66,13 +80,20 @@ for idx = 1:visin.simopts.net.sizex
         visual_som(idx, jdx) = som(idx, jdx).ai;
     end
 end
-subplot(1,2,1); 
-surf(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); caxis([0.0, 1.0]);
-axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
-subplot(1,2,2); 
-imagesc(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); colormap; colorbar; axis xy; 
-fig_title = sprintf('Cross-modal elicited act. in network %s', curr_somid);suptitle(fig_title);
-xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+% if we have a 2D SOM use 3D display for activities
+if(visin.simopts.net.sizex~=1)
+    subplot(1,2,1);
+    surf(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); caxis([0.0, 1.0]);
+    axis xy; xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+    subplot(1,2,2);
+    imagesc(visual_som(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); colormap; colorbar; axis xy;
+    fig_title = sprintf('Cross-modal elicited act. in network %s', curr_somid);suptitle(fig_title);
+    xlabel('Neuron index'); ylabel('Neuron index'); zlabel('Activity');
+else
+    plot(1:visin.simopts.net.sizey, visual_som, 'k', 'LineWidth', 4);
+    fig_title = sprintf('Cross-modal elicited act. in network %s', curr_somid); suptitle(fig_title);
+    axis xy; xlabel('Neuron index'); box off;
+end
 %----------------------------------------------------------------
 % synaptic connections strenghts from sensory projections (W weight matrix)
 figure;
@@ -105,7 +126,7 @@ for sidx = 1:rown*coln
     sample_index = 1:visin.simopts.data.trainvsize;
     plus_sd = [sample_index, fliplr(sample_index)];
     minus_sd = [som(cidx, ridx).W + stdev, fliplr(som(cidx, ridx).W-stdev)];
-    fill(plus_sd, minus_sd, 'y'); hold on; box off;     
+    fill(plus_sd, minus_sd, 'y'); hold on; box off;
     % overlay weitght vector for current neuron
     plot(som(cidx, ridx).W);
 end
@@ -120,8 +141,8 @@ for sidx = 1:rown*coln
     subplot(rown, coln, sidx);
     [ridx, cidx] = ind2sub([coln, rown], sidx);
     % plot the weights for current neuron
-    imagesc(som(cidx, ridx).H(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); hold on; 
-    %if(ridx == visin.simopts.net.size) 
+    imagesc(som(cidx, ridx).H(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); hold on;
+    %if(ridx == visin.simopts.net.size)
     colorbar; caxis([0.0 1.0]);
     %end
     axis xy; colormap; box off; caxis([0.0 1.0]);

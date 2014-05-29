@@ -20,8 +20,8 @@ simopts.data.trainvsize = 10;                         % size (in samples) of the
 simopts.data.ntrainv    = 100;                        % number of trin vectors for training the network (only for full dataset)
 simopts.data.corrtype   = 'algebraic';                % input data correlation type, i.e. algebraic, temporal, nonlinear, delay (sine waves only for generated), amplitude (sine waves only for generated)
 % ---------------------- parametrize the network ------------------------
-simopts.net.sizex        = 5;                         % sizex x sizey lattice SOM nets
-simopts.net.sizey        = 5;                         % X - rows , Y - cols
+simopts.net.sizex        = 1;                         % sizex x sizey lattice SOM nets
+simopts.net.sizey        = 10;                         % X - rows , Y - cols
 simopts.net.params      = 'adaptive';                 % adaptive processes parameters, i.e. fixed/adaptive
 simopts.net.alpha       = 0.1;                        % initial learning rate (adaptive process)
 simopts.net.sigma       = max(simopts.net.sizex, ...

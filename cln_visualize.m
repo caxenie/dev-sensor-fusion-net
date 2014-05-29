@@ -33,14 +33,14 @@ box off; grid off;
 plot(visin.alphat, '.b'); hold on; 
 plot(visin.gammat, '.g'); hold on; 
 plot(visin.xit, '.m'); hold on; 
-plot(visin.kappat, '.k');
+plot(visin.kappat, '.k'); box off;
 suptitle('Adaptation parameters'); 
 xlabel('Epochs');
 legend('Learning rate','Cross-modal impact','Inhibitory gain in W update','Hebbian learning rate'); 
 %----------------------------------------------------------------
 figure; 
 set(gcf, 'color', 'white'); 
-plot(visin.sigmat, '.r'); 
+plot(visin.sigmat, '.r'); box off;
 ylabel('Neighborhood radius');xlabel('Samples');
 %----------------------------------------------------------------
 % visualize a sample input vector
@@ -51,24 +51,21 @@ samples_show_num = 5;
 switch visin.simopts.data.trainvtype
     case 'full'
         plot(visin.netin.raw1, 'b'); hold on; 
-        plot(visin.netin.raw2, 'g'); 
-        box off; grid off;
+        plot(visin.netin.raw2, 'g'); grid off;
     case 'interval'
         start_show_idx = 5; 
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); 
-            set(gcf, 'color', 'white'); 
-            box off; grid off;
+            set(gcf, 'color', 'white'); grid off;
             plot(visin.netin.trainv1(start_show_idx + idx, :), 'r'); hold on;
-            plot(visin.netin.trainv2(start_show_idx + idx, :), 'b');
+            plot(visin.netin.trainv2(start_show_idx + idx, :), 'b'); box off;
         end
     case 'sliding'
         for idx = 1:samples_show_num
             subplot(1,samples_show_num,idx); 
-            set(gcf, 'color', 'white'); 
-            box off; grid off;
+            set(gcf, 'color', 'white'); grid off;
             plot(visin.netin.trainv1(idx, :), 'r'); hold on;
-            plot(visin.netin.trainv2(idx, :), 'b');
+            plot(visin.netin.trainv2(idx, :), 'b'); box off;
         end
 end
 suptitle('Sample training vectors for input p1 vs p2');
