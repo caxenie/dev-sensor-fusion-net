@@ -31,7 +31,7 @@ switch (opts.data.source)
         % noise params (standard deviation)
         minv = 1; maxv = 0.01;
         % bounds for the input values in p1 and p2
-        minp = 1; maxp = 4;
+        minp = 0; maxp = 15;
         % specific params for artificial data
         num_samples = opts.data.numsamples;                     % number of samples in the full dataset (similar to sensors)
         data_freq_samp = 25;                                    % artificial data sampling freq
@@ -76,12 +76,12 @@ switch(opts.data.corrtype)
         % simple algebraic correlation
         p2 = p1.*3;
         % add some noise over the signals
-%         for idx=1:num_samples
-%             additive_noise = minv + (maxv-minv)*rand;
-%             p1(idx) = p1(idx) + additive_noise;
-%             additive_noise = minv + (maxv-minv)*rand;
-%             p2(idx) = p2(idx) + additive_noise;
-%         end
+        for idx=1:num_samples
+            additive_noise = minv + (maxv-minv)*rand;
+            p1(idx) = p1(idx) + additive_noise;
+            additive_noise = minv + (maxv-minv)*rand;
+            p2(idx) = p2(idx) + additive_noise;
+        end
     case 'temporal'
         % temporal integration
         p2 = zeros(1, length(p1)); p2(1) = p1(1);

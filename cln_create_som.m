@@ -37,7 +37,11 @@ for idx = 1:opt.net.sizex
         net(idx, jdx).xpos = idx;
         net(idx, jdx).ypos = jdx;
         for in_idx = 1:opt.data.trainvsize
-            net(idx, jdx).W(in_idx) = minin + (maxin - minin)*rand;
+            if(strcmp(idx, 'som1')==1)
+                net(idx, jdx).W(in_idx) = minin + (maxin - minin)*rand;
+            else
+                net(idx, jdx).W(in_idx) = minin + (maxin - minin)*rand;
+            end
         end
         for kidx = 1:opt.net.sizex
             for tidx = 1:opt.net.sizey

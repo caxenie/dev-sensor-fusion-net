@@ -195,52 +195,58 @@ while(1)
                 fprintf(1, 'SOM2.ad = \n'); [som2.ad]
             end
             
+            % compute cross-modal activation only if cross-modal learning
+            % is enabled in the network
+            if(strcmp(simopts.net.xmodlearn, 'none')==0)
+                for idx = 1:simopts.net.sizex
+                    for jdx = 1:simopts.net.sizey
+                        % ---------------------------------------------------------------------------------------------------------
+                        % compute the indirect activation
+                        
+                        % from all other units in SOM2
+                        for isom1 = 1:simopts.net.sizex
+                            for jsom1 = 1:simopts.net.sizey
+                                for isom2 = 1:simopts.net.sizex
+                                    for jsom2 = 1:simopts.net.sizey
+                                        % sum of all products between direct activation
+                                        % and cross-som Hebbian weights
+                                        cross_mod2(isom1, jsom1) = cross_mod2(isom1, jsom1) + ...
+                                            som2(isom2, jsom2).ad*som2(isom2, jsom2).H(isom1, jsom1);
+                                    end
+                                end
+                            end
+                        end
+                        % find the cross-modal best-matching-unit (max activity)
+                        [bmval, bmloc] = max(cross_mod2(:)); [xid, yid] = ind2sub(size(cross_mod2), bmloc);
+                        bmuind1.xpos = xid; bmuind1.ypos = yid; bmuind1.act = bmval;
+                        som1(idx, jdx).ai = exp(-(norm([bmuind1.xpos - idx, bmuind1.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
+                        
+                        % from all other units in SOM1
+                        for isom2 = 1:simopts.net.sizex
+                            for jsom2 = 1:simopts.net.sizey
+                                for isom1 = 1:simopts.net.sizex
+                                    for jsom1 = 1:simopts.net.sizey
+                                        % sum of all products between direct activation
+                                        % and cross-som Hebbian weights
+                                        cross_mod1(isom2, jsom2) = cross_mod1(isom2, jsom2) + ...
+                                            som1(isom1, jsom1).ad*som1(isom1, jsom1).H(isom2, jsom2);
+                                    end
+                                end
+                            end
+                        end
+                        % find the cross-modal best-matching-unit
+                        [bmval, bmloc] = max(cross_mod1(:)); [xid, yid] = ind2sub(size(cross_mod1), bmloc);
+                        bmuind2.xpos = xid; bmuind2.ypos = yid; bmuind2.act = bmval;
+                        som2(idx, jdx).ai = exp(-(norm([bmuind2.xpos - idx, bmuind2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
+                    end
+                end
+            end
+            % ---------------------------------------------------------------------------------------------------------
+            
+            % compute the joint activation from both afferent
+            % sensory input and cross-modal Hebbian linkage for
             for idx = 1:simopts.net.sizex
                 for jdx = 1:simopts.net.sizey
-                    % ---------------------------------------------------------------------------------------------------------
-                    % compute the indirect activation
-                    
-                    % from all other units in SOM2
-                    for isom1 = 1:simopts.net.sizex
-                        for jsom1 = 1:simopts.net.sizey
-                            for isom2 = 1:simopts.net.sizex
-                                for jsom2 = 1:simopts.net.sizey
-                                    % sum of all products between direct activation
-                                    % and cross-som Hebbian weights
-                                    cross_mod2(isom1, jsom1) = cross_mod2(isom1, jsom1) + ...
-                                        som2(isom2, jsom2).ad*som2(isom2, jsom2).H(isom1, jsom1);
-                                end
-                            end
-                        end
-                    end
-                    % find the cross-modal best-matching-unit (max activity)
-                    [bmval, bmloc] = max(cross_mod2(:)); [xid, yid] = ind2sub(size(cross_mod2), bmloc);
-                    bmuind1.xpos = xid; bmuind1.ypos = yid; bmuind1.act = bmval;
-                    som1(idx, jdx).ai = exp(-(norm([bmuind1.xpos - idx, bmuind1.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
-                    
-                    % from all other units in SOM1
-                    for isom2 = 1:simopts.net.sizex
-                        for jsom2 = 1:simopts.net.sizey
-                            for isom1 = 1:simopts.net.sizex
-                                for jsom1 = 1:simopts.net.sizey
-                                    % sum of all products between direct activation
-                                    % and cross-som Hebbian weights
-                                    cross_mod1(isom2, jsom2) = cross_mod1(isom2, jsom2) + ...
-                                        som1(isom1, jsom1).ad*som1(isom1, jsom1).H(isom2, jsom2);
-                                end
-                            end
-                        end
-                    end
-                    % find the cross-modal best-matching-unit
-                    [bmval, bmloc] = max(cross_mod1(:)); [xid, yid] = ind2sub(size(cross_mod1), bmloc);
-                    bmuind2.xpos = xid; bmuind2.ypos = yid; bmuind2.act = bmval;
-                    som2(idx, jdx).ai = exp(-(norm([bmuind2.xpos - idx, bmuind2.ypos - jdx]))^2/(2*(sigmat(net_iter)^2)));
-                    
-                    % ---------------------------------------------------------------------------------------------------------
-                    
-                    % compute the joint activation from both afferent
-                    % sensory input and cross-modal Hebbian linkage for
-                    
                     % SOM1
                     som1(idx, jdx).at = (1 - gammat(net_iter))*som1(idx, jdx).ad + gammat(net_iter)*som1(idx, jdx).ai;
                     
@@ -517,8 +523,8 @@ while(1)
 end
 % save everything to a file and return the name
 file_dump = sprintf('%d_epochs_%d_x_%d_neurons_%s_source_data_%s_correlation_%d_trainvsize_%d_trainvnum_%s_params_%s_xmodlearn',...
-            simopts.net.maxepochs, simopts.net.sizex, simopts.net.sizey, simopts.data.source, simopts.data.corrtype, simopts.data.trainvsize,...
-            simopts.data.ntrainv, simopts.net.params, simopts.net.xmodlearn);
+    simopts.net.maxepochs, simopts.net.sizex, simopts.net.sizey, simopts.data.source, simopts.data.corrtype, simopts.data.trainvsize,...
+    simopts.data.ntrainv, simopts.net.params, simopts.net.xmodlearn);
 save(file_dump);
 rundata = load(file_dump);
 end
