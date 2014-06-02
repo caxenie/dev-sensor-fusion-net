@@ -21,26 +21,31 @@ figure;
 set(gcf, 'color', 'white');
 subplot(2, 1, 1); plot(visin.netin.raw1, 'b'); 
 box off; grid off;
-ylabel('Input var P1'); xlabel('Samples');
+ylabel('Input dataset var P1'); xlabel('Samples');
 subplot(2, 1, 2);
-plot(visin.netin.raw2, 'g'); 
+plot(visin.netin.raw2, 'r'); 
 box off; grid off;
-ylabel('Input var P2'); xlabel('Samples');
+ylabel('Input dataset var P2'); xlabel('Samples');
 %----------------------------------------------------------------
 figure; 
 set(gcf, 'color', 'white'); 
 box off; grid off;
 plot(visin.alphat, '.b'); hold on; 
+if(strcmp(visin.simopts.net.xmodlearn, 'none')~=1)
 plot(visin.gammat, '.g'); hold on; 
 plot(visin.xit, '.m'); hold on; 
 plot(visin.kappat, '.k'); box off;
 suptitle('Adaptation parameters'); 
 xlabel('Epochs');
 legend('Learning rate','Cross-modal impact','Inhibitory gain in W update','Hebbian learning rate'); 
+else
+xlabel('Epochs'); box off;
+legend('Learning rate'); 
+end
 %----------------------------------------------------------------
 figure; 
 set(gcf, 'color', 'white'); 
-plot(visin.sigmat, '.r'); box off;
+plot(visin.sigmat, '.k'); box off;
 ylabel('Neighborhood radius');xlabel('Samples');
 %----------------------------------------------------------------
 % visualize a sample input vector
@@ -51,7 +56,7 @@ samples_show_num = 5;
 switch visin.simopts.data.trainvtype
     case 'full'
         plot(visin.netin.raw1, 'b'); hold on; 
-        plot(visin.netin.raw2, 'g'); grid off;
+        plot(visin.netin.raw2, 'r'); grid off;
     case 'interval'
         start_show_idx = 5; 
         for idx = 1:samples_show_num

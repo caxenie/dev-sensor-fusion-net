@@ -19,7 +19,7 @@ function visin = cln_runtime_dataset_setup(opts)
         runtime_data = load(opts.data.infile);
     catch lasterr;
         fprintf('cln_runtime_dataset_setup: %s !\n', lasterr.message);
-        visin = 0;
+        visin = struct([]);
         return;
     end
     visin = runtime_data;

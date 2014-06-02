@@ -15,25 +15,26 @@ simopts.debug.visual    = 0;                          % flag to activate / inact
 simopts.data.source     = 'generated';                % data source: generated or sensors (data from robot)
 simopts.data.trainvtype = 'sliding';                  % train vector type, i.e. fixed interval / sliding window / full dataset
 simopts.data.slidesize  = 1;                          % sliding window size (only for sliding) slidesize < trainvsize
-simopts.data.numsamples = 10000;                       % total number of samples to generate (only for generated data)
-simopts.data.trainvsize = 40;                         % size (in samples) of the input vector (only for sliding and interval)
+simopts.data.numsamples = 1000;                       % total number of samples to generate (only for generated data)
+simopts.data.trainvsize = 10;                         % size (in samples) of the input vector (only for sliding and interval)
 simopts.data.ntrainv    = 100;                        % number of train vectors for training the network (only for full dataset)
 simopts.data.corrtype   = 'algebraic';                % input data correlation type, i.e. algebraic, temporal, nonlinear, 
                                                       % delay (sine waves only for generated), amplitude (sine waves only for generated)
 % ---------------------- parametrize the network ------------------------
-simopts.net.sizex        = 1;                         % sizex x sizey lattice SOM nets
-simopts.net.sizey        = 40;                        % X - rows , Y - cols
-simopts.net.params      = 'adaptive';                 % adaptive processes parameters, i.e. fixed/adaptive
+simopts.net.sizex        = 5;                         % sizex x sizey lattice SOM nets
+simopts.net.sizey        = 5;                        % X - rows , Y - cols
+simopts.net.params      = 'fixed';                 % adaptive processes parameters, i.e. fixed/adaptive
 simopts.net.alpha       = 0.1;                        % ini  tial learning rate (adaptive process)
 simopts.net.sigma       = max(simopts.net.sizex, ...
                               simopts.net.sizey)/2+1; % initial neighborhood size (adaptive process)
-simopts.net.maxepochs   = 500;                        % number of epochs to train
+simopts.net.maxepochs   = 100;                        % number of epochs to train
 simopts.net.gamma       = 0;                          % cross-modal activation impact on local som learning
 simopts.net.xi          = 0.0;                       % inhibitory component in sensory projections weight update
 simopts.net.kappa       = 0.2;                        % learning rate (gain factor) in Hebbian weight update
 simopts.net.lambda      = simopts.net.maxepochs/...
                           log(simopts.net.sigma);     % temporal coef
 simopts.net.xmodlearn   = 'none';                     % cross modal learning mechanism, i.e. hebb, covariance (pseudo-Hebbian) or none (no cross interaction)
+simopts.net.synapses    = 'genesis';                  % initial state for sensory afferents synapses (genesis (=0) or random (=[min, max]) or fixed (={v1,v2})
 %% RUN THE CORRELATION LEARNING NETWORK (MODES: RUN / ANALYZE)
 % check mode
 switch(simopts.mode)
