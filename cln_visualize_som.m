@@ -135,6 +135,22 @@ for sidx = 1:rown*coln
 end
 fig_title = sprintf('Sensory projections synaptic weights in network %s', curr_somid);suptitle(fig_title);
 
+%----------------------------------------------------------------
+% synaptic connections strenghts in color map
+figure;
+set(gcf, 'color', 'white'); box off; grid off;
+sz = visin.simopts.net.sizey;
+Wshow = zeros(sz, sz);
+for sidx = 1:sz
+    for tidx = 1:sz
+        Wshow(sidx, tidx) = som(sidx).W(tidx);
+    end
+end
+% plot the weights
+imagesc(Wshow(1:sz, 1:sz));
+colorbar; axis xy; colormap; box off;
+fig_title = sprintf('Sensory projections synaptic weights in network %s (colormap)', curr_somid);suptitle(fig_title);
+    
 % check if cross-modal interaction is enabled
 if(strcmp(visin.simopts.net.xmodlearn, 'none')~=1)
     %----------------------------------------------------------------

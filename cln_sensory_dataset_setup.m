@@ -74,7 +74,7 @@ end
 switch(opts.data.corrtype)
     case 'algebraic'
         % simple algebraic correlation
-        p2 = p1.*3;
+        p2 = p1*3;
         % add some noise over the signals
         for idx=1:num_samples
             additive_noise = minv + (maxv-minv)*rand;
