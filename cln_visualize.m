@@ -17,6 +17,7 @@
 function cln_visualize(visin)
 % visualize input data
 %----------------------------------------------------------------
+if (strcmp(visin.simopts.data.trainvtype,'hunt')==1)
 figure; 
 set(gcf, 'color', 'white');
 subplot(2, 1, 1); plot(visin.netin.raw1, 'b'); 
@@ -26,6 +27,30 @@ subplot(2, 1, 2);
 plot(visin.netin.raw2, 'r'); 
 box off; grid off;
 ylabel('Input dataset var P2'); xlabel('Samples');
+
+figure; 
+set(gcf, 'color', 'white');
+subplot(2, 1, 1); plot(visin.netin.trainv1(:,1), 'b'); hold on;
+plot(visin.netin.trainv1(:,2), 'b'); 
+box off; grid off;
+ylabel('Input dataset var P1 trainv'); xlabel('Samples');
+subplot(2, 1, 2);
+plot(visin.netin.trainv2(:,1), 'r');  hold on;
+plot(visin.netin.trainv2(:,2), 'r'); 
+box off; grid off;
+ylabel('Input dataset var P2 trainv'); xlabel('Samples');
+else
+%----------------------------------------------------------------
+figure; 
+set(gcf, 'color', 'white');
+subplot(2, 1, 1); plot(visin.netin.raw1, 'b'); 
+box off; grid off;
+ylabel('Input dataset var P1'); xlabel('Samples');
+subplot(2, 1, 2);
+plot(visin.netin.raw2, 'r'); 
+box off; grid off;
+ylabel('Input dataset var P2'); xlabel('Samples');
+end
 %----------------------------------------------------------------
 figure; 
 set(gcf, 'color', 'white'); 

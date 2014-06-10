@@ -99,6 +99,8 @@ else
 end
 %----------------------------------------------------------------
 % synaptic connections strenghts from sensory projections (W weight matrix)
+% present data only if is not in hunt mode
+if(strcmp(visin.simopts.data.trainvtype, 'hunt')==0)
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
 % present each neurons receptive field (mean input sequence that triggers that neuron - weight vector)
@@ -134,23 +136,46 @@ for sidx = 1:rown*coln
     plot(som(cidx, ridx).W);
 end
 fig_title = sprintf('Sensory projections synaptic weights in network %s', curr_somid);suptitle(fig_title);
-
+end
 %----------------------------------------------------------------
-% synaptic connections strenghts in color map
+% component planes analysis for the correlation hunting train type
+if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
+    figure; 
+    set(gcf, 'color', 'white'); box off; grid off;
+    % plot each component from the input vector for each neuron in the som
+    % slice the som so that component planes emerge
+    for idx = 1:visin.simopts.data.trainvsize
+    subplot(1, visin.simopts.data.trainvsize, idx);
+    Wshow = zeros(visin.simopts.net.sizex, visin.simopts.net.sizey);
+        for xidx = 1:visin.simopts.net.sizex
+            for yidx = 1:visin.simopts.net.sizey
+                Wshow(xidx, yidx) = som(xidx, yidx).W(idx); 
+            end
+        end
+        % plot the weights
+        imagesc(Wshow(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey));
+        colorbar; axis xy; colormap('gray'); box off;
+    end
+    fig_title = sprintf('Component planes for net %s (colormap)', curr_somid);suptitle(fig_title);
+else
+% synaptic connections strenghts in color map in neuron - component view
+% for 1D som
 figure;
 set(gcf, 'color', 'white'); box off; grid off;
-sz = visin.simopts.net.sizey;
-Wshow = zeros(sz, sz);
-for sidx = 1:sz
-    for tidx = 1:sz
+szx = visin.simopts.net.sizey;
+szy = visin.simopts.data.trainvsize;
+Wshow = zeros(szx, szy);
+for sidx = 1:szx
+    for tidx = 1:szy
         Wshow(sidx, tidx) = som(sidx).W(tidx);
     end
 end
 % plot the weights
-imagesc(Wshow(1:sz, 1:sz));
+imagesc(Wshow(1:szx, 1:szy)');
 colorbar; axis xy; colormap; box off;
 fig_title = sprintf('Sensory projections synaptic weights in network %s (colormap)', curr_somid);suptitle(fig_title);
-    
+end
+
 % check if cross-modal interaction is enabled
 if(strcmp(visin.simopts.net.xmodlearn, 'none')~=1)
     %----------------------------------------------------------------

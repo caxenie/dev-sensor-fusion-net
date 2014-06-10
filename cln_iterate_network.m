@@ -37,7 +37,7 @@ sigmat(1) = simopts.net.sigma;
 gammat(1) = simopts.net.gamma;
 xit(1)    = simopts.net.xi;
 kappat(1) = simopts.net.kappa;
-tau = 500;
+tau = simopts.net.maxepochs;
 if(simopts.debug.visual==1)
     % epoch wise visualization of network activities(direct, indirect and total)
     act_vis = figure; set(gcf, 'color', 'white'); box off;

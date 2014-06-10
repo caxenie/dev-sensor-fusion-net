@@ -74,7 +74,7 @@ end
 switch(opts.data.corrtype)
     case 'algebraic'
         % simple algebraic correlation
-        p2 = p1*3;
+        p2 = 3*p1;
         % add some noise over the signals
         for idx=1:num_samples
             additive_noise = minv + (maxv-minv)*rand;
@@ -150,6 +150,35 @@ switch(opts.data.trainvtype)
         training_set_p1(1,:) = training_set_p1(2,:); training_set_p1(end, :) = training_set_p1(2,:);
         training_set_p2(1,:) = training_set_p2(2,:); training_set_p2(end, :) = training_set_p2(2,:);
         [~, training_set_size] = size(training_set_p1');
+    case 'hunt'
+        % bounds for the input values in p1 and p2
+        minv = 0; maxv = 2;
+        % init
+        trainlen = opts.data.trainvsize;
+        training_set_size = ceil(opts.data.numsamples/trainlen);
+        training_set_p1 = zeros(training_set_size, trainlen);
+        training_set_p2 = zeros(training_set_size, trainlen);
+        p1 = zeros(1, training_set_size);
+        p2 = zeros(1, training_set_size);
+        for idx = 1:training_set_size
+            p1(idx) = idx;% + minp + (maxp - minp)*rand;                % generate the first variable
+            p2(idx) = idx;% + minp + (maxp - minp)*rand;                % generate the second variable
+        end
+        % create signals and add some noise
+        for idx = 1:training_set_size
+            additive_noise = minv + (maxv-minv)*rand;
+            training_set_p1(idx, 1) = p1(1, idx) + additive_noise;
+            additive_noise = minv + (maxv-minv)*rand;
+            training_set_p1(idx, 2) = 1 - p1(1, idx) + additive_noise;
+            additive_noise = minv + (maxv-minv)*rand;
+            training_set_p1(idx, 3) = 1/p1(1, idx) + additive_noise;
+            additive_noise = minv + (maxv-minv)*rand;
+            training_set_p2(idx, 1) = p2(1, idx) + additive_noise;
+            additive_noise = minv + (maxv-minv)*rand;
+            training_set_p2(idx, 2) = 1- p2(1, idx) + additive_noise;
+            additive_noise = minv + (maxv-minv)*rand;
+            training_set_p2(idx, 3) = 1/p2(1, idx) + additive_noise;
+        end
 end
 % embed everything in the return struct
 netin.raw1 = p1; netin.raw2 = p2;
