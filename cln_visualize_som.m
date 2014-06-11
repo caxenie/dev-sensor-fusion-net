@@ -140,6 +140,20 @@ end
 %----------------------------------------------------------------
 % component planes analysis for the correlation hunting train type
 if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
+    % first find the bounds in the data so that all colormaps are aligned 
+    minmax = zeros(2, visin.simopts.data.trainvsize);
+    for idx = 1:visin.simopts.data.trainvsize
+    Wshow = zeros(visin.simopts.net.sizex, visin.simopts.net.sizey);
+        for xidx = 1:visin.simopts.net.sizex
+            for yidx = 1:visin.simopts.net.sizey
+                Wshow(xidx, yidx) = som(xidx, yidx).W(idx); 
+            end
+        end
+        minmax(1, idx) = min(Wshow(:));
+        minmax(2, idx) = max(Wshow(:));
+    end
+    min_scale = min(minmax(1,:));
+    max_scale = max(minmax(2,:));
     figure; 
     set(gcf, 'color', 'white'); box off; grid off;
     % plot each component from the input vector for each neuron in the som
@@ -153,10 +167,68 @@ if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
             end
         end
         % plot the weights
-        imagesc(Wshow(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey));
-        colorbar; axis xy; colormap('gray'); box off;
+        imagesc(Wshow(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); %, [min_scale, max_scale]);
+        colorbar; axis xy; colormap('gray'); box off; 
     end
     fig_title = sprintf('Component planes for net %s (colormap)', curr_somid);suptitle(fig_title);
+    
+    % add a view of the data representing each component from the training
+    % vectors which are learned by the network
+    figure;
+    set(gcf, 'color', 'white'); grid off;
+    for idx = 1:visin.simopts.data.trainvsize
+        subplot(1, visin.simopts.data.trainvsize, idx);
+        switch(curr_somid)
+            case '1'
+                plot(visin.netin.trainv1(:,idx)); box off;
+            case '2'
+                plot(visin.netin.trainv2(:,idx)); box off;
+        end
+        xlabel('Samples'); ylabel(sprintf('Component %d', idx)); 
+    end
+    
+    % plot the learned dependencies in the network
+    % plot the independent component planes values one against each other
+    % and compare with input data to check the quantization error
+    % analyze each component
+    figure;
+    set(gcf, 'color', 'white'); grid off;
+    for idx = 1:visin.simopts.data.trainvsize
+        subplot(1, visin.simopts.data.trainvsize, idx);
+        switch(curr_somid)
+            case '1'
+                plot(visin.netin.trainv1(:,idx), 'k'); hold on;
+                plot(visin.bmu1_hist(idx, :), 'g'); box off;
+                xlabel('Samples'); legend('Input data','Learned data'); 
+            case '2'
+                plot(visin.netin.trainv2(:,idx),'k'); hold on;
+                plot(visin.bmu2_hist(idx, :), 'g'); box off;
+                xlabel('Samples'); legend('Input data','Learned data'); 
+        end
+    end
+    suptitle('Per component analysis');
+    
+    % plot the learned dependencies in the network
+    % plot the independent component planes values one against each other
+    % and compare with input data to check the quantization error
+    % analyze all components 
+    figure;
+    set(gcf, 'color', 'white'); grid off;
+    for idx = 1:2
+        subplot(1, 2, idx);
+        switch(curr_somid)
+            case '1'
+                plot(visin.netin.trainv1(end,:), 'k'); hold on;
+                plot(visin.bmu1_hist(:, end), 'g'); box off;
+                xlabel('Samples'); legend('Input data','Learned data'); 
+            case '2'
+                plot(visin.netin.trainv2(end,:), 'k'); hold on;
+                plot(visin.bmu2_hist(:, end), 'g'); box off;
+                xlabel('Samples'); legend('Input data','Learned data'); 
+        end
+    end
+    suptitle('All components analysis');
+    
 else
 % synaptic connections strenghts in color map in neuron - component view
 % for 1D som

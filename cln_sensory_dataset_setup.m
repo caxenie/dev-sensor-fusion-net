@@ -151,9 +151,7 @@ switch(opts.data.trainvtype)
         training_set_p2(1,:) = training_set_p2(2,:); training_set_p2(end, :) = training_set_p2(2,:);
         [~, training_set_size] = size(training_set_p1');
     case 'hunt'
-        % bounds for the input values in p1 and p2
-        minv = 0; maxv = 2;
-        % init
+        % init correlation hunting code (sample training input vector: [x, 1-x, 1/x, 2*x ...])
         trainlen = opts.data.trainvsize;
         training_set_size = ceil(opts.data.numsamples/trainlen);
         training_set_p1 = zeros(training_set_size, trainlen);
@@ -161,23 +159,21 @@ switch(opts.data.trainvtype)
         p1 = zeros(1, training_set_size);
         p2 = zeros(1, training_set_size);
         for idx = 1:training_set_size
-            p1(idx) = idx;% + minp + (maxp - minp)*rand;                % generate the first variable
-            p2(idx) = idx;% + minp + (maxp - minp)*rand;                % generate the second variable
+            p1(idx) = idx;                % generate the first variable
+            p2(idx) = idx;                % generate the second variable
         end
         % create signals and add some noise
         for idx = 1:training_set_size
-            additive_noise = minv + (maxv-minv)*rand;
-            training_set_p1(idx, 1) = p1(1, idx) + additive_noise;
-            additive_noise = minv + (maxv-minv)*rand;
-            training_set_p1(idx, 2) = 1 - p1(1, idx) + additive_noise;
-            additive_noise = minv + (maxv-minv)*rand;
-            training_set_p1(idx, 3) = 1/p1(1, idx) + additive_noise;
-            additive_noise = minv + (maxv-minv)*rand;
-            training_set_p2(idx, 1) = p2(1, idx) + additive_noise;
-            additive_noise = minv + (maxv-minv)*rand;
-            training_set_p2(idx, 2) = 1- p2(1, idx) + additive_noise;
-            additive_noise = minv + (maxv-minv)*rand;
-            training_set_p2(idx, 3) = 1/p2(1, idx) + additive_noise;
+            training_set_p1(idx, 1) = p1(1, idx);
+            training_set_p1(idx, 2) = 1 - p1(1, idx);
+            training_set_p1(idx, 3) = 1/p1(1, idx);
+            training_set_p1(idx, 4) = 2*p1(1, idx);
+            training_set_p1(idx, 5) = p1(1, idx) + 1;
+            training_set_p2(idx, 1) = p2(1, idx);
+            training_set_p2(idx, 2) = 1- p2(1, idx);
+            training_set_p2(idx, 3) = 1/p2(1, idx);
+            training_set_p2(idx, 4) = 2*p2(1, idx);
+            training_set_p2(idx, 5) = p2(1, idx) + 1;
         end
 end
 % embed everything in the return struct

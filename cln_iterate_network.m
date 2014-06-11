@@ -38,6 +38,9 @@ gammat(1) = simopts.net.gamma;
 xit(1)    = simopts.net.xi;
 kappat(1) = simopts.net.kappa;
 tau = simopts.net.maxepochs;
+% add the bmu history to see the network learning capabilities
+bmu1_hist = zeros(simopts.data.trainvsize, (simopts.data.numsamples/simopts.data.trainvsize));
+bmu2_hist = zeros(simopts.data.trainvsize, (simopts.data.numsamples/simopts.data.trainvsize));
 if(simopts.debug.visual==1)
     % epoch wise visualization of network activities(direct, indirect and total)
     act_vis = figure; set(gcf, 'color', 'white'); box off;
@@ -140,6 +143,11 @@ while(1)
                     end
                 end
             end % end of bmus search loop
+            
+            % update the bmu history
+            bmu1_hist(:, trainv_idx) = som1(bmudir1.xpos, bmudir1.ypos).W;
+            bmu2_hist(:, trainv_idx) = som1(bmudir2.xpos, bmudir2.ypos).W;
+            
             % check if verbose is on for debugging
             if(simopts.debug.verbose == 1)
                 % first som
@@ -389,7 +397,7 @@ while(1)
             end
             
             % check if we enabled the cross-modal interaction, if yes check
-            % what learnign rule we are currently using in the network
+            % what learning rule we are currently using in the network
             if(strcmp(simopts.net.xmodlearn, 'none')==0)
                 for idx = 1:simopts.net.sizex
                     for jdx = 1:simopts.net.sizey
