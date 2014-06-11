@@ -167,7 +167,7 @@ if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
             end
         end
         % plot the weights
-        imagesc(Wshow(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); %, [min_scale, max_scale]);
+        imagesc(Wshow(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey),[min_scale, max_scale]);
         colorbar; axis xy; colormap('gray'); box off; 
     end
     fig_title = sprintf('Component planes for net %s (colormap)', curr_somid);suptitle(fig_title);
@@ -214,8 +214,6 @@ if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
     % analyze all components 
     figure;
     set(gcf, 'color', 'white'); grid off;
-    for idx = 1:2
-        subplot(1, 2, idx);
         switch(curr_somid)
             case '1'
                 plot(visin.netin.trainv1(end,:), 'k'); hold on;
@@ -226,7 +224,6 @@ if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
                 plot(visin.bmu2_hist(:, end), 'g'); box off;
                 xlabel('Samples'); legend('Input data','Learned data'); 
         end
-    end
     suptitle('All components analysis');
     
 else
