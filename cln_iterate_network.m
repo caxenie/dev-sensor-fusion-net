@@ -146,7 +146,7 @@ while(1)
             
             % update the bmu history
             bmu1_hist(:, trainv_idx) = som1(bmudir1.xpos, bmudir1.ypos).W;
-            bmu2_hist(:, trainv_idx) = som1(bmudir2.xpos, bmudir2.ypos).W;
+            bmu2_hist(:, trainv_idx) = som2(bmudir2.xpos, bmudir2.ypos).W;
             
             % check if verbose is on for debugging
             if(simopts.debug.verbose == 1)

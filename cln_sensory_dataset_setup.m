@@ -160,7 +160,7 @@ switch(opts.data.trainvtype)
         p2 = zeros(1, training_set_size);
         for idx = 1:training_set_size
             p1(idx) = idx;                % generate the first variable
-            p2(idx) = idx;                % generate the second variable
+            p2(idx) = idx*3;                % generate the second variable
         end
         % create signals and add some noise
         for idx = 1:training_set_size

@@ -8,7 +8,7 @@
 clear all; close all; clc; pause(2);
 %% LOAD DATA AND SETUP RUNTIME
 % -------------- simulation options parametrization ---------------------
-simopts.mode            = 'analyze';                      % mode given the function of the script, i.e. run, analyze
+simopts.mode            = 'run';                      % mode given the function of the script, i.e. run, analyze
 simopts.debug.verbose   = 0;                          % flag to activate / inactivate debug verbose
 simopts.debug.visual    = 0;                          % flag to activate / inactivate debug visualization
 % ---------- data generation and preprocessing parametrization ----------
@@ -28,13 +28,13 @@ simopts.net.alpha       = 0.01;                       % initial learning rate (a
 simopts.net.sigma       = max(simopts.net.sizex, ...
                               simopts.net.sizey)/2+1; % initial neighborhood size (adaptive process)
 simopts.net.maxepochs   = 500;                        % number of epochs to train
-simopts.net.gamma       = 0.0;                        % cross-modal activation impact on local som learning
-simopts.net.xi          = 0.0;                        % inhibitory component in sensory projections weight update
+simopts.net.gamma       = 0.1;                        % cross-modal activation impact on local som learning
+simopts.net.xi          = 0.02;                        % inhibitory component in sensory projections weight update
 simopts.net.kappa       = 0.2;                        % learning rate (gain factor) in Hebbian weight update
 simopts.net.lambda      = simopts.net.maxepochs/...
                           log(simopts.net.sigma);     % temporal coef
-simopts.net.xmodlearn   = 'none';                     % cross modal learning mechanism, i.e. hebb, covariance (pseudo-Hebbian) or none (no cross interaction)
-simopts.net.synapses    = 'random';                   % initial state for sensory afferents synapses (genesis (=0) or random (=[min/, max]) or fixed (={v1,v2})
+simopts.net.xmodlearn   = 'hebb';                     % cross modal learning mechanism, i.e. hebb, covariance (pseudo-Hebbian) or none (no cross interaction)
+simopts.net.synapses    = 'genesis';                   % initial state for sensory afferents synapses (genesis (=0) or random (=[min/, max]) or fixed (={v1,v2})
 %% RUN THE CORRELATION LEARNING NETWORK (MODES: RUN / ANALYZE)
 % check mode
 switch(simopts.mode)
