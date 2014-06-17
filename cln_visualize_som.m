@@ -117,21 +117,23 @@ for sidx = 1:rown*coln
             % from the training dataset and the current neuron receptive
             % field (prefered value)
             for indx = 1:visin.simopts.data.trainvsize
-                mean_qe(indx) = mean(visin.netin.trainv1(:, indx) - som(cidx, ridx).W(indx));
-                stdev(indx) = std(visin.netin.trainv1(:, indx) - som(cidx, ridx).W(indx));
+                mean_qe(indx) = mean(som(cidx, ridx).W(indx), 1);
+                stdev(indx) = std(visin.netin.trainv1(:, indx) - som(cidx, ridx).W(indx), 0, 1);
             end
         case '2'
             for indx = 1:visin.simopts.data.trainvsize
-                mean_qe(indx) = mean(visin.netin.trainv2(:, indx) - som(cidx, ridx).W(indx));
-                stdev(indx) = std(visin.netin.trainv2(:, indx) - som(cidx, ridx).W(indx));
+                mean_qe(indx) = mean(som(cidx, ridx).W(indx), 1);
+                stdev(indx) = std(visin.netin.trainv2(:, indx) - som(cidx, ridx).W(indx), 0, 1);
             end
     end
     % plot the quantization error (+/- standard deviation) overlayed on the preferred value of each
     % neuron after training
-    sample_index = 1:visin.simopts.data.trainvsize;
-    plus_sd = [sample_index, fliplr(sample_index)];
-    minus_sd = [som(cidx, ridx).W + stdev, fliplr(som(cidx, ridx).W-stdev)];
-    fill(plus_sd, minus_sd, 'y'); hold on; box off;
+    samples = 1:visin.simopts.data.trainvsize;
+    plus_sd = [mean_qe + stdev];  
+    minus_sd = [mean_qe - stdev];
+    patch([samples, samples(end:-1:1)],...
+           [minus_sd, plus_sd(end:-1:1)],...
+           [0.7 0.65 0.71]); hold on; box off;
     % overlay weitght vector for current neuron
     plot(som(cidx, ridx).W);
 end
@@ -173,7 +175,7 @@ if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
             end
         end
         % plot the weights
-        imagesc(Wshow(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey), [min_scale, max_scale]);
+        imagesc(Wshow(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); %, [min_scale, max_scale]);
         colorbar; axis xy; colormap('gray'); box off; 
     end
     fig_title = sprintf('Component planes for net %s (colormap)', curr_somid);suptitle(fig_title);
@@ -224,11 +226,11 @@ if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
             case '1'
                 plot(visin.netin.trainv1(end,:), 'k'); hold on;
                 plot(visin.bmu1_hist(:, end), 'g'); box off;
-                xlabel('Samples'); legend('Input data','Learned data'); 
+                legend('Input data','Learned data'); 
             case '2'
                 plot(visin.netin.trainv2(end,:), 'k'); hold on;
                 plot(visin.bmu2_hist(:, end), 'g'); box off;
-                xlabel('Samples'); legend('Input data','Learned data'); 
+                legend('Input data','Learned data'); 
         end
     suptitle('All components analysis');
     
@@ -242,11 +244,11 @@ if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
             case '1'
                 plot(visin.netin.trainv1(:,1), visin.netin.trainv1(:,idx), 'k'); hold on;
                 plot(visin.bmu1_hist(1, :), visin.bmu1_hist(idx, :), 'g'); box off;
-                xlabel('Samples'); legend('Input data','Learned data'); 
+                legend('Input data','Learned data'); 
             case '2'
                 plot(visin.netin.trainv2(:,1), visin.netin.trainv2(:,idx), 'k'); hold on;
                 plot(visin.bmu2_hist(1, :), visin.bmu2_hist(idx, :), 'g'); box off;
-                xlabel('Samples'); legend('Input data','Learned data'); 
+                legend('Input data','Learned data'); 
         end
     end
     suptitle('Correlation plots');
@@ -279,11 +281,16 @@ if(strcmp(visin.simopts.net.xmodlearn, 'none')~=1)
     set(gcf, 'color', 'white'); box off; grid off;
     coln = visin.simopts.net.sizey; % true for square matrix
     rown = visin.simopts.net.sizex;
+    % make sure that the cross modal weights suplot agrees with the network
+    % layout for neurons as used in activity and component planes analysis
+    subplot_align_raw = reshape(1:coln*rown, coln, [])';
+    subplot_align_prep = flipud(subplot_align_raw);
+    subplot_align = reshape(subplot_align_prep.',1,[]);
     for sidx = 1:rown*coln
-        subplot(rown, coln, sidx);
+        subplot(rown, coln, subplot_align(sidx));
         [ridx, cidx] = ind2sub([coln, rown], sidx);
         % plot the weights for current neuron
-        imagesc(som(cidx, ridx).H(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey)); hold on;
+        imagesc((som(cidx, ridx).H(1:visin.simopts.net.sizex, 1:visin.simopts.net.sizey))); hold on;
         %if(ridx == visin.simopts.net.size)
         colorbar; caxis([0.0 1.0]);
         %end
