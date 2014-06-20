@@ -21,20 +21,20 @@ simopts.data.ntrainv    = 100;                        % number of train vectors 
 simopts.data.corrtype   = 'algebraic';                % input data correlation type, i.e. algebraic, temporal, nonlinear, 
                                                       % delay (sine waves only for generated), amplitude (sine waves only for generated)
 % ---------------------- parametrize the network ------------------------
-simopts.net.sizex       = 5;                         % sizex x sizey lattice SOM nets
-simopts.net.sizey       = 5;                         % X - rows , Y - cols
+simopts.net.sizex       = 10;                         % sizex x sizey lattice SOM nets
+simopts.net.sizey       = 10;                         % X - rows , Y - cols
 simopts.net.params      = 'fixed';                    % adaptive processes parameters, i.e. fixed/adaptive
-simopts.net.alpha       = 0.1;                       % initial learning rate (adaptive process)
+simopts.net.alpha       = 0.01;                       % initial learning rate (adaptive process)
 simopts.net.sigma       = max(simopts.net.sizex, ...
                               simopts.net.sizey)/2+1; % initial neighborhood size (adaptive process)
 simopts.net.maxepochs   = 500;                        % number of epochs to train
-simopts.net.gamma       = 0.0;                        % cross-modal activation impact on local som learning
-simopts.net.xi          = 0.0;                        % inhibitory component in sensory projections weight update
-simopts.net.kappa       = 0.0;                        % learning rate (gain factor) in Hebbian weight update
+simopts.net.gamma       = 0.1;                        % cross-modal activation impact on local som learning
+simopts.net.xi          = 0.02;                        % inhibitory component in sensory projections weight update
+simopts.net.kappa       = 0.2;                        % learning rate (gain factor) in Hebbian weight update
 simopts.net.lambda      = simopts.net.maxepochs/...
                           log(simopts.net.sigma);     % temporal coef
-simopts.net.xmodlearn   = 'none';                     % cross modal learning mechanism, i.e. hebb, covariance (pseudo-Hebbian) or none (no cross interaction)
-simopts.net.synapses    = 'random';                   % initial state for sensory afferents synapses (genesis (=0) or random (=[min/, max]) or fixed (={v1,v2})
+simopts.net.xmodlearn   = 'hebb';                     % cross modal learning mechanism, i.e. hebb, covariance (pseudo-Hebbian) or none (no cross interaction)
+simopts.net.synapses    = 'genesis';                   % initial state for sensory afferents synapses (genesis (=0) or random (=[min/, max]) or fixed (={v1,v2})
 %% RUN THE CORRELATION LEARNING NETWORK (MODES: RUN / ANALYZE)
 % check mode
 switch(simopts.mode)
@@ -51,7 +51,6 @@ switch(simopts.mode)
         simopts.data.infile = sprintf('%d_epochs_%d_x_%d_neurons_%s_source_data_%s_correlation_%d_trainvsize_%d_trainvnum_%s_params_%s_xmodlearn',...
             simopts.net.maxepochs, simopts.net.sizex, simopts.net.sizey, simopts.data.source, simopts.data.corrtype, simopts.data.trainvsize,...
             simopts.data.ntrainv, simopts.net.params, simopts.net.xmodlearn);
-        simopts.data.infile = 'test_ordered_data.mat';
         % prepare input data for visualization
         visin = cln_runtime_dataset_setup(simopts);
         if(isempty(fieldnames(visin))==1) 

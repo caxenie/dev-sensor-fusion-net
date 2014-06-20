@@ -220,39 +220,56 @@ if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
     % plot the independent component planes values one against each other
     % and compare with input data to check the quantization error
     % analyze all components 
-    figure;
-    set(gcf, 'color', 'white'); grid off;
-        switch(curr_somid)
-            case '1'
-                plot(visin.netin.trainv1(end,:), 'k'); hold on;
-                plot(visin.bmu1_hist(:, end), 'g'); box off;
-                legend('Input data','Learned data'); 
-            case '2'
-                plot(visin.netin.trainv2(end,:), 'k'); hold on;
-                plot(visin.bmu2_hist(:, end), 'g'); box off;
-                legend('Input data','Learned data'); 
-        end
-    suptitle('All components analysis');
-    
+%     figure;
+%     set(gcf, 'color', 'white'); grid off;
+%         switch(curr_somid)
+%             case '1'
+%                 plot(visin.netin.trainv1(end,:), 'k'); hold on;
+%                 plot(visin.bmu1_hist(:, end), 'g'); box off;
+%                 legend('Input data','Learned data'); 
+%             case '2'
+%                 plot(visin.netin.trainv2(end,:), 'k'); hold on;
+%                 plot(visin.bmu2_hist(:, end), 'g'); box off;
+%                 legend('Input data','Learned data'); 
+%         end
+%     suptitle('All components analysis');
+%     
     % plot the dependencies as learned from the net and the input data fed
     % to the network for training
-    figure;
-    set(gcf, 'color', 'white'); grid off;
-    for idx = 1:visin.simopts.data.trainvsize
-        subplot(1, visin.simopts.data.trainvsize, idx);
-        switch(curr_somid)
-            case '1'
-                plot(visin.netin.trainv1(:,1), visin.netin.trainv1(:,idx), 'k'); hold on;
-                plot(visin.bmu1_hist(1, :), visin.bmu1_hist(idx, :), 'g'); box off;
-                legend('Input data','Learned data'); 
-            case '2'
-                plot(visin.netin.trainv2(:,1), visin.netin.trainv2(:,idx), 'k'); hold on;
-                plot(visin.bmu2_hist(1, :), visin.bmu2_hist(idx, :), 'g'); box off;
-                legend('Input data','Learned data'); 
-        end
-    end
-    suptitle('Correlation plots');
-      
+%     figure;
+%     set(gcf, 'color', 'white'); grid off;
+%     for idx = 1:visin.simopts.data.trainvsize
+%         subplot(1, visin.simopts.data.trainvsize, idx);
+%         samples = 1:length(visin.bmu1_hist(1,:));
+%         switch(curr_somid)
+%             case '1'
+%                 plot(samples, visin.netin.trainv1(:,idx), 'k'); hold on;
+%                 plot(samples, visin.bmu1_hist(idx, :), 'g'); box off;
+%                 legend('Input data','Learned data'); 
+%             case '2'
+%                 plot(samples, visin.netin.trainv2(:,idx), 'k'); hold on;
+%                 plot(samples, visin.bmu2_hist(idx, :), 'g'); box off;
+%                 legend('Input data','Learned data'); 
+%         end
+%     end
+%     suptitle('Correlation plots');
+  
+    % print the input vector dataset as concatenated vectors of trainvsize
+    % components 
+    figure; 
+    suptitle('Training datasets');
+    set(gcf, 'color', 'white');
+    full_dataset1 = reshape(visin.netin.trainv1.',1,[]);
+    full_dataset2 = reshape(visin.netin.trainv2.',1,[]);
+    subplot(2,2,1);
+    plot(full_dataset1);  box off; grid off; xlabel('Samples');ylabel('First SOM');
+    subplot(2,2,2);
+    plot(500:650,full_dataset1(500:650));  box off; grid off; xlabel('Samples');
+    subplot(2,2,3);
+    plot(full_dataset2);  box off; grid off; xlabel('Samples');ylabel('Second SOM');
+    subplot(2,2,4);
+    plot(500:650,full_dataset2(500:650));  box off; grid off; xlabel('Samples');
+    
 else
     
 % synaptic connections strenghts in color map in neuron - component view
