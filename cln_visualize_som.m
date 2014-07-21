@@ -206,11 +206,11 @@ if(strcmp(visin.simopts.data.trainvtype, 'hunt')==1)
         switch(curr_somid)
             case '1'
                 plot(visin.netin.trainv1(:,idx), 'k'); hold on;
-                plot(visin.bmu1_hist(idx, :), 'g'); box off;
+                plot(visin.bmu1_hist(end, idx, :), 'g'); box off;
                 xlabel('Samples'); legend('Input data','Learned data'); 
             case '2'
                 plot(visin.netin.trainv2(:,idx),'k'); hold on;
-                plot(visin.bmu2_hist(idx, :), 'g'); box off;
+                plot(visin.bmu2_hist(end, idx, :), 'g'); box off;
                 xlabel('Samples'); legend('Input data','Learned data'); 
         end
     end

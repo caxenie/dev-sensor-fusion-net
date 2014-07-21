@@ -43,7 +43,7 @@ for idx = 1:opt.net.sizex
                 case 'random'
                     net(idx, jdx).W(in_idx) = minin + (maxin - minin)*rand;
                 case 'fixed'
-                    net(idx, jdx).W(in_idx) = (maxin - minin)/2*rand;
+                    net(idx, jdx).W(in_idx) = (maxin - minin)/2;
             end
         end
         for kidx = 1:opt.net.sizex

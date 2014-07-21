@@ -8,35 +8,35 @@
 clear all; close all; clc; pause(2);
 %% LOAD DATA AND SETUP RUNTIME
 % -------------- simulation options parametrization ---------------------
-simopts.mode            = 'analyze';                  % mode given the function of the script, i.e. run, analyze
-simopts.environment     = 'c';                        % runtime environment {c, matlab}
+simopts.mode            = 'analyze';                      % mode given the function of the script, i.e. run, analyze
+simopts.environment     = 'matlab';                        % runtime environment {c, matlab}
 simopts.debug.verbose   = 0;                          % flag to activate / inactivate debug verbose
 simopts.debug.visual    = 0;                          % flag to activate / inactivate debug visualization
 % ---------- data generation and preprocessing parametrization ----------
 simopts.data.source     = 'generated';                % data source: generated or sensors (data from robot)
-simopts.data.trainvtype = 'hunt';                     % train vector type, i.e. fixed interval / sliding window / full dataset / correlation hunt
+simopts.data.trainvtype = 'sliding';                     % train vector type, i.e. fixed interval / sliding window / full dataset / correlation hunt
 simopts.data.slidesize  = 1;                          % sliding window size (only for sliding) slidesize < trainvsize
-simopts.data.numsamples = 1000;                       % total number of samples to generate (only for generated data)
-simopts.data.trainvsize = 5;                          % size (in samples) of the input vector (only for sliding / interval / hunt )
-simopts.data.ntrainv    = 100;                        % number of train vectors for training the network (only for full dataset)
-simopts.data.corrtype   = 'algebraic';                % input data correlation type, i.e. algebraic, temporal, nonlinear,
-% delay (sine waves only for generated), amplitude (sine waves only for generated)
+simopts.data.numsamples = 500;                       % total number of samples to generate (only for generated data)
+simopts.data.trainvsize = 100;                          % size (in samples) of the input vector (only for sliding / interval / hunt )
+simopts.data.ntrainv    = 10;                        % number of train vectors for training the network (only for full dataset)
+simopts.data.corrtype   = 'delay';                % input data correlation type, i.e. algebraic, temporal, nonlinear,
+                                                     % delay (sine waves only for generated), amplitude (sine waves only for generated)
 % ---------------------- parametrize the network ------------------------
-simopts.net.sizex       = 10;                         % sizex x sizey lattice SOM nets
-simopts.net.sizey       = 10;                         % X - rows , Y - cols
+simopts.net.sizex       = 1;                         % sizex x sizey lattice SOM nets
+simopts.net.sizey       = 3;                         % X - rows , Y - cols
 simopts.net.params      = 'fixed';                    % adaptive processes parameters, i.e. fixed/adaptive
 simopts.net.alpha       = 0.01;                       % initial learning rate (adaptive process)
 simopts.net.sigma       = max(simopts.net.sizex, ...
-    simopts.net.sizey)/2+1; % initial neighborhood size (adaptive process)
-simopts.net.maxepochs   = 500;                        % number of epochs to train
-simopts.net.gamma       = 0.1;                        % cross-modal activation impact on local som learning
+                          simopts.net.sizey)/2+1; % initial neighborhood size (adaptive process)
+simopts.net.maxepochs   = 5000;                        % number of epochs to train
+simopts.net.gamma       = 0.3;                        % cross-modal activation impact on local som learning
 simopts.net.xi          = 0.02;                        % inhibitory component in sensory projections weight update
-simopts.net.kappa       = 0.2;                        % learning rate (gain factor) in Hebbian weight update
+simopts.net.kappa       = 0.01;                        % learning rate (gain factor) in Hebbian weight update
 simopts.net.lambda      = simopts.net.maxepochs/...
-    log(simopts.net.sigma);     % temporal coef
-simopts.net.xmodlearn   = 'hebb';                     % cross modal learning mechanism, i.e. hebb, covariance (pseudo-Hebbian) or none (no cross interaction)
+                          log(simopts.net.sigma);     % temporal coef
+simopts.net.xmodlearn   = 'covariance';                     % cross modal learning mechanism, i.e. hebb, covariance (pseudo-Hebbian) or none (no cross interaction)
 % http://icwww.epfl.ch/~gerstner/SPNM/node72.html
-simopts.net.synapses    = 'genesis';                   % initial state for sensory afferents synapses (genesis (=0) or random (=[min/, max]) or fixed (={v1,v2})
+simopts.net.synapses    = 'random';                   % initial state for sensory afferents synapses (genesis (=0) or random (=[min, max]) or fixed (={v1,v2})
 %% RUN THE CORRELATION LEARNING NETWORK (MODES: RUN / ANALYZE)
 % check mode
 switch(simopts.mode)
@@ -59,13 +59,13 @@ switch(simopts.mode)
                 % prepare input data for visualization
                 visin = cln_runtime_dataset_setup(simopts);
                 if(isempty(fieldnames(visin))==1)
+                    disp 'No data file to load.';
                     return; % no net runtime data file present
                 end
                 % visualize network dynamics
                 cln_visualize(visin);
             case 'c'
                 % read the binary file generated by the c network code
-                simopts.data.infile = '';
         end
         fprintf(1, 'Finalized visualization process\n');
 end
